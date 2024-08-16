@@ -50,11 +50,11 @@ linux.release = {
 }
 
 macos.debug = {
-    "lib/macos/universal/libvosk.dyld" : "Contents/Frameworks"
+    "lib/macos/universal/libvosk.dylib" : "Contents/Frameworks"
 }
 
 macos.release = {
-    "lib/macos/universal/libvosk.dyld" : "Contents/Frameworks"
+    "lib/macos/universal/libvosk.dylib" : "Contents/Frameworks"
 }
 
 windows.debug = {
