@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://dx7h3r4e5iji8"]
+
+[node name="SpeechRecognizer" type="SpeechRecognizer"]
+recording_bus_name = &"Record"
+vosk_model_path = "res://vosk-model-small-en-us-0.15"
