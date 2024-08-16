@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Unlicense
 
-find_program( GIT_PROGRAM git )
+find_program(GIT_PROGRAM git)
 
-if ( GIT_PROGRAM )
+if (GIT_PROGRAM)
     # get version information
     execute_process(
         COMMAND "${GIT_PROGRAM}" --version
@@ -10,37 +10,37 @@ if ( GIT_PROGRAM )
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    message( STATUS "Using git: ${GIT_PROGRAM} (${GIT_VERSION})" )
+    message(STATUS "Using git: ${GIT_PROGRAM} (${GIT_VERSION})")
 
-    include( GetGitRevisionDescription )
+    include(GetGitRevisionDescription)
 
-    get_git_head_revision( GIT_REFSPEC GIT_SHA1 )
-    git_describe( GIT_SHORT )
+    get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+    git_describe(GIT_SHORT)
 
-    string( TOUPPER ${PROJECT_NAME} UPPER_PROJECT_NAME )
+    string(TOUPPER ${PROJECT_NAME} UPPER_PROJECT_NAME)
 
-    set( VERSION_INPUT_FILE "src/Version.h.in" )
-    set( VERSION_OUTPUT_FILE "${CMAKE_BINARY_DIR}/gen/Version.h" )
+    set(VERSION_INPUT_FILE "src/Version.h.in")
+    set(VERSION_OUTPUT_FILE "${CMAKE_BINARY_DIR}/gen/Version.h")
 
-    configure_file( "${VERSION_INPUT_FILE}" "${VERSION_OUTPUT_FILE}" )
+    configure_file("${VERSION_INPUT_FILE}" "${VERSION_OUTPUT_FILE}")
 
-    target_sources( ${PROJECT_NAME}
+    target_sources(${PROJECT_NAME}
         PRIVATE
             "${VERSION_INPUT_FILE}"
             "${VERSION_OUTPUT_FILE}"
     )
 
-    get_filename_component( VERSION_OUTPUT_FILE_DIR ${VERSION_OUTPUT_FILE} DIRECTORY )
+    get_filename_component(VERSION_OUTPUT_FILE_DIR ${VERSION_OUTPUT_FILE} DIRECTORY)
 
-    target_include_directories( ${PROJECT_NAME}
+    target_include_directories(${PROJECT_NAME}
         PRIVATE
             ${VERSION_OUTPUT_FILE_DIR}
     )
 
-    message( STATUS "${PROJECT_NAME} version: ${GIT_SHORT}" )
+    message(STATUS "${PROJECT_NAME} version: ${GIT_SHORT}")
 
-    unset( VERSION_INPUT_FILE )
-    unset( VERSION_OUTPUT_FILE )
-    unset( VERSION_OUTPUT_FILE_DIR )
-    unset( GIT_VERSION )
-endif()
+    unset(VERSION_INPUT_FILE)
+    unset(VERSION_OUTPUT_FILE)
+    unset(VERSION_OUTPUT_FILE_DIR)
+    unset(GIT_VERSION)
+endif ()

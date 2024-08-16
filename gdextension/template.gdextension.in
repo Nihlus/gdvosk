@@ -1,0 +1,68 @@
+[configuration]
+entry_symbol = "gdvosk_library_init"
+compatibility_minimum = 4.3
+
+[icons]
+Example = "icons/Example.svg"
+
+[libraries]
+android.debug.arm32 = "lib/android/arm32/libgdvosk-d.so"
+android.release.arm32 = "lib/android/arm32/libgdvosk.so"
+android.debug.arm64 = "lib/android/arm64/libgdvosk-d.so"
+android.release.arm64 = "lib/android/arm64/libgdvosk.so"
+android.debug.x86_32 = "lib/android/x86_32/libgdvosk-d.so"
+android.release.x86_32 = "lib/android/x86_32/libgdvosk.so"
+android.debug.x86_64 = "lib/android/x86_64/libgdvosk-d.so"
+android.release.x86_64 = "lib/android/x86_64/libgdvosk.so"
+
+linux.debug.x86_64 = "lib/linux/x86_64/libgdvosk-d.so"
+linux.release.x86_64 = "lib/linux/x86_64/libgdvosk.so"
+
+macos.debug = "lib/macos/universal/libgdvosk-d.dylib"
+macos.release = "lib/macos/universal/libgdvosk.dylib"
+
+windows.debug.x86_32 = "lib/windows/x86_32/libgdvosk-d.dll"
+windows.release.x86_32 = "lib/windows/x86_32/libgdvosk.dll"
+windows.debug.x86_64 = "lib/windows/x86_64/libgdvosk-d.dll"
+windows.release.x86_64 = "lib/windows/x86_64/libgdvosk.dll"
+
+[dependencies]
+android.debug = {
+    "lib/android/arm32/libvosk.so" : "",
+    "lib/android/arm64/libvosk.so" : "",
+    "lib/android/x86_32/libvosk.so" : "",
+    "lib/android/x86_64/libvosk.so" : ""
+}
+
+android.release = {
+    "lib/android/arm32/libvosk.so" : "",
+    "lib/android/arm64/libvosk.so" : "",
+    "lib/android/x86_32/libvosk.so" : "",
+    "lib/android/x86_64/libvosk.so" : ""
+}
+
+linux.debug = {
+    "lib/linux/x86_64/libvosk.so" : ""
+}
+
+linux.release = {
+    "lib/linux/x86_64/libvosk.so" : ""
+}
+
+macos.debug = {
+    "lib/macos/universal/libvosk.dyld" : "Contents/Frameworks"
+}
+
+macos.release = {
+    "lib/macos/universal/libvosk.dyld" : "Contents/Frameworks"
+}
+
+windows.debug = {
+    "lib/windows/x86_32/libvosk.dll" : "",
+    "lib/windows/x86_64/libvosk.dll" : ""
+}
+
+windows.release = {
+    "lib/windows/x86_32/libvosk.dll" : "",
+    "lib/windows/x86_64/libvosk.dll" : ""
+}
