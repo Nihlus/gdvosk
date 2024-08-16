@@ -7,6 +7,8 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "SpeechRecognizer.h"
+
 using namespace godot;
 
 void initialize_gdvosk_module(ModuleInitializationLevel p_level) 
@@ -16,7 +18,7 @@ void initialize_gdvosk_module(ModuleInitializationLevel p_level)
         return;
     }
 
-    //GDREGISTER_CLASS(SpeechRecognizer);
+    GDREGISTER_CLASS(SpeechRecognizer);
 }
 
 void uninitialize_gdvosk_module(ModuleInitializationLevel p_level) 
@@ -35,7 +37,7 @@ extern "C" {
         GDExtensionInitialization* r_initialization
     ) 
     {
-        godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
+        GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
         init_obj.register_initializer(initialize_gdvosk_module);
         init_obj.register_terminator(uninitialize_gdvosk_module);
