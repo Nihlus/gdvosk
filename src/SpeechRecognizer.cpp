@@ -267,12 +267,14 @@ void SpeechRecognizer::worker_main()
         {
             if (_recording_effect == nullptr || !_recording_effect->is_recording_active())
             {
+                _bus_semaphore->post();
                 continue;
             }
 
             recording = _recording_effect->get_recording();
             if (!recording.is_valid())
             {
+                _bus_semaphore->post();
                 continue;
             }
         }
