@@ -13,7 +13,10 @@ namespace gdvosk
     {
         GDCLASS(VoskModel, godot::Resource)
 
-        ::VoskModel* _model;
+        ::VoskModel* _model = nullptr;
+
+    protected:
+        static void _bind_methods();
 
     public:
         ~VoskModel() override;

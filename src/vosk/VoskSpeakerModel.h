@@ -14,7 +14,10 @@ namespace gdvosk
     {
         GDCLASS(VoskSpeakerModel, godot::Resource)
 
-        VoskSpkModel* _model;
+        VoskSpkModel* _model = nullptr;
+
+    protected:
+        static void _bind_methods();
 
     public:
         ~VoskSpeakerModel() override;

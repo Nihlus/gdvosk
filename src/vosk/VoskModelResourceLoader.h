@@ -6,26 +6,30 @@
 
 #include <godot_cpp/classes/resource_format_loader.hpp>
 
-class VoskModelResourceLoader final : public godot::ResourceFormatLoader
+namespace gdvosk
 {
-    GDCLASS(VoskModelResourceLoader, godot::ResourceFormatLoader)
+    class VoskModelResourceLoader final : public godot::ResourceFormatLoader
+    {
+        GDCLASS(VoskModelResourceLoader, godot::ResourceFormatLoader)
 
-public:
-    [[nodiscard]] godot::PackedStringArray _get_recognized_extensions() const override;
+    protected:
+        static void _bind_methods();
 
-    [[nodiscard]] bool _handles_type(const godot::StringName& p_type) const override;
+    public:
+        [[nodiscard]] godot::PackedStringArray _get_recognized_extensions() const override;
 
-    [[nodiscard]] godot::String _get_resource_type(const godot::String& p_path) const override;
+        [[nodiscard]] bool _handles_type(const godot::StringName& p_type) const override;
 
-    [[nodiscard]] godot::Variant _load
-    (
-        const godot::String& p_path,
-        const godot::String& p_original_path,
-        bool p_use_sub_threads,
-        int32_t p_cache_mode
-    ) const override;
-};
+        [[nodiscard]] godot::String _get_resource_type(const godot::String& p_path) const override;
 
-
+        [[nodiscard]] godot::Variant _load
+                (
+                        const godot::String& p_path,
+                        const godot::String& p_original_path,
+                        bool p_use_sub_threads,
+                        int32_t p_cache_mode
+                ) const override;
+    };
+}
 
 #endif //VOSKMODELRESOURCELOADER_H

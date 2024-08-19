@@ -8,6 +8,7 @@
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <vosk/vosk_api.h>
+#include <godot_cpp/classes/audio_stream_wav.hpp>
 
 #include "VoskSpeakerModel.h"
 
@@ -17,17 +18,20 @@ namespace gdvosk
     {
         GDCLASS(VoskRecognizer, godot::RefCounted)
 
-        ::VoskRecognizer* _recognizer;
+        ::VoskRecognizer* _recognizer = nullptr;
 
-        godot::Ref<VoskModel> _model;
-        float _sample_rate;
-        godot::Ref<VoskSpeakerModel> _speaker_model;
-        godot::PackedStringArray _grammar;
+        godot::Ref<VoskModel> _model = nullptr;
+        float _sample_rate = 0.0;
+        godot::Ref<VoskSpeakerModel> _speaker_model = nullptr;
+        godot::PackedStringArray _grammar = { };
 
         int _max_alternatives = 1;
         bool _include_words_in_output = false;
         bool _include_words_in_partial_output = false;
         bool _use_nlsml_output = false;
+
+    protected:
+        static void _bind_methods();
 
     public:
         godot::Error setup
@@ -37,7 +41,7 @@ namespace gdvosk
             const godot::Ref<VoskSpeakerModel>& speaker_model = nullptr
         );
 
-        godot::Error setup
+        godot::Error setup_with_grammar
         (
             const godot::Ref<VoskModel>& model,
             float sample_rate,
@@ -59,8 +63,21 @@ namespace gdvosk
         [[nodiscard]] bool get_use_nlsml_output() const;
         void set_use_nlsml_output(bool use_nlsml_output);
 
+        godot::Error accept_waveform(const godot::Ref<godot::AudioStreamWAV>& stream);
+
+        godot::Dictionary get_result();
+
+        godot::Dictionary get_partial_result();
+
+        godot::Dictionary get_final_result();
+
+        void reset();
+
     private:
         void update_recognizer_parameters();
+
+        static godot::PackedByteArray mix_stereo_to_mono(const godot::PackedByteArray& data);
+        static godot::Dictionary parse_dictionary(const godot::String& data);
     };
 }
 

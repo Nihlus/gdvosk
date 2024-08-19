@@ -4,6 +4,8 @@
 #include "VoskModel.h"
 
 #include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/dir_access.hpp>
+#include <godot_cpp/classes/zip_reader.hpp>
 
 using namespace gdvosk;
 using namespace godot;
@@ -48,4 +50,10 @@ Error gdvosk::VoskModel::load(const String& path)
 ::VoskModel* gdvosk::VoskModel::get_ptr() const
 {
     return _model;
+}
+
+void gdvosk::VoskModel::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("find_word"), &VoskModel::find_word);
+    ClassDB::bind_method(D_METHOD("load"), &VoskModel::load);
 }

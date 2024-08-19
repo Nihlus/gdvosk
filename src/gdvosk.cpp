@@ -6,10 +6,17 @@
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
 
 #include "SpeechRecognizer.h"
+#include "vosk/VoskModelResourceLoader.h"
+#include "vosk/VoskRecognizer.h"
 
 using namespace godot;
+using namespace gdvosk;
+
+static Ref<VoskModelResourceLoader> _model_loader = nullptr;
 
 void initialize_gdvosk_module(ModuleInitializationLevel p_level) 
 {
@@ -17,6 +24,16 @@ void initialize_gdvosk_module(ModuleInitializationLevel p_level)
     {
         return;
     }
+
+    GDREGISTER_CLASS(VoskModelResourceLoader);
+
+    _model_loader.instantiate();
+    ResourceLoader::get_singleton()->add_resource_format_loader(_model_loader);
+
+    GDREGISTER_CLASS(gdvosk::VoskModel);
+    GDREGISTER_CLASS(VoskSpeakerModel);
+
+    GDREGISTER_CLASS(gdvosk::VoskRecognizer);
 
     GDREGISTER_CLASS(SpeechRecognizer);
 }
