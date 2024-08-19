@@ -16,7 +16,10 @@
 using namespace godot;
 using namespace gdvosk;
 
-static Ref<VoskModelResourceLoader> _model_loader = nullptr;
+namespace gdvosk
+{
+    static Ref<VoskModelResourceLoader> _model_loader = nullptr;
+}
 
 void initialize_gdvosk_module(ModuleInitializationLevel p_level) 
 {
@@ -44,6 +47,8 @@ void uninitialize_gdvosk_module(ModuleInitializationLevel p_level)
     {
         return;
     }
+
+    _model_loader.unref();
 }
 
 extern "C" {

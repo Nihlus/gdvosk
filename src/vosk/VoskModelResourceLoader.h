@@ -23,12 +23,12 @@ namespace gdvosk
         [[nodiscard]] godot::String _get_resource_type(const godot::String& p_path) const override;
 
         [[nodiscard]] godot::Variant _load
-                (
-                        const godot::String& p_path,
-                        const godot::String& p_original_path,
-                        bool p_use_sub_threads,
-                        int32_t p_cache_mode
-                ) const override;
+        (
+            const godot::String& p_path,
+            const godot::String& p_original_path,
+            bool p_use_sub_threads,
+            int32_t p_cache_mode
+        ) const override;
     };
 }
 
