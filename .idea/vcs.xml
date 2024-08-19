@@ -3,5 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extern/godot-cpp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extern/kaldi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extern/vosk-api" vcs="Git" />
   </component>
 </project>

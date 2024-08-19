@@ -5,8 +5,14 @@ cmake_minimum_required(VERSION 3.22)
 # Add paths to modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
+message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
+
 # Turn on link time optimization for everything
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+
+# Default to hidden all the time
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 # Build universal lib on macOS
 # Note that CMAKE_OSX_ARCHITECTURES must be set before project().
@@ -71,6 +77,8 @@ endif ()
 
 set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/")
 
+message(STATUS "Installing to: ${INSTALL_DIR}")
+
 install(
     TARGETS ${PROJECT_NAME}
     LIBRARY
@@ -88,7 +96,6 @@ install(
 
 add_subdirectory(gdextension)
 
-
 # godot-cpp
 # From here: https://github.com/godotengine/godot-cpp
 if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/extern/godot-cpp/Makefile")
@@ -100,12 +107,38 @@ endif ()
 
 set(GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE)
 
-add_subdirectory(extern/godot-cpp)
+option(BUILD_SHARED_LIBS "Build and link with libraries." OFF)
 
+add_subdirectory(extern/godot-cpp)
 set_target_properties(godot-cpp
     PROPERTIES
         CXX_VISIBILITY_PRESET hidden
 )
+
+# policies for kaldi
+cmake_policy(PUSH)
+    set(CMAKE_POLICY_DEFAULT_CMP0146 OLD)
+    set(CMAKE_POLICY_DEFAULT_CMP0148 OLD)
+    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+
+    set(KALDI_BUILD_EXE OFF)
+    set(KALDI_BUILD_TEST OFF)
+
+
+    add_subdirectory(extern/kaldi)
+    add_custom_target(kaldi-tools
+        COMMAND make -j openfst cub
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/extern/kaldi/tools
+    )
+    add_dependencies(kaldi-base kaldi-tools)
+cmake_policy(POP)
+
+set(kaldi_ROOT "${CMAKE_CURRENT_BINARY_DIR}/extern/kaldi")
+
+cmake_policy(PUSH)
+    add_subdirectory(extern/vosk-api)
+cmake_policy(POP)
 
 add_subdirectory(thirdparty/vosk)
 

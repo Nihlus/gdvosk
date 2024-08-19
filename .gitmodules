@@ -1,3 +1,9 @@
 [submodule "extern/godot-cpp"]
 	path = extern/godot-cpp
 	url = https://github.com/godotengine/godot-cpp.git
+[submodule "extern/vosk-api"]
+	path = extern/vosk-api
+	url = git@github.com:alphacep/vosk-api.git
+[submodule "extern/kaldi"]
+	path = extern/kaldi
+	url = https://github.com/alphacep/kaldi
