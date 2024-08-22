@@ -22,12 +22,11 @@ Error gdvosk::VoskRecognizer::setup
     }
 
     _model = model;
-    _sample_rate = sample_rate;
     _speaker_model = speaker_model;
 
     _recognizer = speaker_model != nullptr
-            ? vosk_recognizer_new_spk(_model->get_ptr(), _sample_rate, _speaker_model->get_ptr())
-            : vosk_recognizer_new(_model->get_ptr(), _sample_rate);
+            ? vosk_recognizer_new_spk(_model->get_ptr(), sample_rate, _speaker_model->get_ptr())
+            : vosk_recognizer_new(_model->get_ptr(), sample_rate);
 
     if (_recognizer == nullptr)
     {
@@ -53,12 +52,11 @@ Error gdvosk::VoskRecognizer::setup_with_grammar
     }
 
     _model = model;
-    _sample_rate = sample_rate;
     _speaker_model.unref();
 
     auto json = JSON::stringify(grammar);
 
-    _recognizer = vosk_recognizer_new_grm(_model->get_ptr(), _sample_rate, json.ascii());
+    _recognizer = vosk_recognizer_new_grm(_model->get_ptr(), sample_rate, json.ascii());
 
     if (_recognizer == nullptr)
     {
@@ -262,7 +260,7 @@ godot::Dictionary gdvosk::VoskRecognizer::get_result()
         return { };
     }
 
-    return parse_dictionary(result);
+    return parse_json_as_dictionary(result);
 }
 
 godot::Dictionary gdvosk::VoskRecognizer::get_partial_result()
@@ -273,7 +271,7 @@ godot::Dictionary gdvosk::VoskRecognizer::get_partial_result()
         return { };
     }
 
-    return parse_dictionary(result);
+    return parse_json_as_dictionary(result);
 }
 
 godot::Dictionary gdvosk::VoskRecognizer::get_final_result()
@@ -284,10 +282,10 @@ godot::Dictionary gdvosk::VoskRecognizer::get_final_result()
         return { };
     }
 
-    return parse_dictionary(result);
+    return parse_json_as_dictionary(result);
 }
 
-godot::Dictionary gdvosk::VoskRecognizer::parse_dictionary(const String& data)
+godot::Dictionary gdvosk::VoskRecognizer::parse_json_as_dictionary(const godot::String& data)
 {
     Ref<JSON> parsed;
     parsed.instantiate();
@@ -313,57 +311,29 @@ void gdvosk::VoskRecognizer::reset()
 
 void gdvosk::VoskRecognizer::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("setup"), &VoskRecognizer::setup);
-    ClassDB::bind_method(D_METHOD("setup_with_grammar"), &VoskRecognizer::setup_with_grammar);
-    ClassDB::bind_method(D_METHOD("accept_stream"), &VoskRecognizer::accept_stream);
-    ClassDB::bind_method(D_METHOD("accept_samples"), &VoskRecognizer::accept_samples);
+    ClassDB::bind_method
+    (
+        D_METHOD("setup", "model", "sample_rate", "speaker_model"),
+        &VoskRecognizer::setup,
+        DEFVAL(nullptr)
+    );
+
+    ClassDB::bind_method
+    (
+        D_METHOD("setup_with_grammar", "model", "sample_rate", "grammar"),
+        &VoskRecognizer::setup_with_grammar
+    );
+
+    ClassDB::bind_method(D_METHOD("accept_stream", "stream"), &VoskRecognizer::accept_stream);
+    ClassDB::bind_method(D_METHOD("accept_samples", "samples"), &VoskRecognizer::accept_samples);
     ClassDB::bind_method(D_METHOD("get_result"), &VoskRecognizer::get_result);
     ClassDB::bind_method(D_METHOD("get_partial_result"), &VoskRecognizer::get_partial_result);
     ClassDB::bind_method(D_METHOD("get_final_result"), &VoskRecognizer::get_final_result);
     ClassDB::bind_method(D_METHOD("reset"), &VoskRecognizer::reset);
 
-    ClassDB::bind_method(D_METHOD("set_speaker_model"), &VoskRecognizer::set_speaker_model);
-    ClassDB::bind_method(D_METHOD("get_speaker_model"), &VoskRecognizer::get_speaker_model);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::OBJECT, "speaker_model", PROPERTY_HINT_RESOURCE_TYPE, "VoskSpeakerModel"),
-        "set_speaker_model",
-        "get_speaker_model"
-    );
-
-    ClassDB::bind_method(D_METHOD("set_max_alternatives"), &VoskRecognizer::set_max_alternatives);
-    ClassDB::bind_method(D_METHOD("get_max_alternatives"), &VoskRecognizer::get_max_alternatives);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::INT, "max_alternatives"),
-        "set_max_alternatives",
-        "get_max_alternatives"
-    );
-
-    ClassDB::bind_method(D_METHOD("set_include_words_in_output"), &VoskRecognizer::set_include_words_in_output);
-    ClassDB::bind_method(D_METHOD("get_include_words_in_output"), &VoskRecognizer::get_include_words_in_output);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::BOOL, "include_words_in_output"),
-        "set_include_words_in_output",
-        "get_include_words_in_output"
-    );
-
-    ClassDB::bind_method(D_METHOD("set_include_words_in_partial_output"), &VoskRecognizer::set_include_words_in_partial_output);
-    ClassDB::bind_method(D_METHOD("get_include_words_in_partial_output"), &VoskRecognizer::get_include_words_in_partial_output);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::BOOL, "include_words_in_partial_output"),
-        "set_include_words_in_partial_output",
-        "get_include_words_in_partial_output"
-    );
-
-    ClassDB::bind_method(D_METHOD("set_use_nlsml_output"), &VoskRecognizer::set_use_nlsml_output);
-    ClassDB::bind_method(D_METHOD("get_use_nlsml_output"), &VoskRecognizer::get_use_nlsml_output);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::BOOL, "use_nlsml_output"),
-        "set_use_nlsml_output",
-        "get_use_nlsml_output"
-    );
+    REGISTER_GODOT_PROPERTY_WITH_HINT(Variant::OBJECT, speaker_model, PROPERTY_HINT_RESOURCE_TYPE, "VoskSpeakerModel")
+    REGISTER_GODOT_PROPERTY(Variant::INT, max_alternatives)
+    REGISTER_GODOT_PROPERTY(Variant::BOOL, include_words_in_output)
+    REGISTER_GODOT_PROPERTY(Variant::BOOL, include_words_in_partial_output)
+    REGISTER_GODOT_PROPERTY(Variant::BOOL, use_nlsml_output)
 }
