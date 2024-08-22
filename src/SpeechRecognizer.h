@@ -7,7 +7,10 @@
 #include <condition_variable>
 #include <memory>
 #include <optional>
+#include <variant>
+#include <queue>
 #include <godot_cpp/classes/audio_effect_record.hpp>
+#include <godot_cpp/classes/audio_effect_capture.hpp>
 #include <godot_cpp/classes/audio_server.hpp>
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/thread.hpp>
@@ -24,7 +27,7 @@ class SpeechRecognizer : public godot::Node
     godot::Ref<godot::Thread> _worker = nullptr;
 
     int _recording_bus_index = 0;
-    godot::Ref<godot::AudioEffectRecord> _recording_effect = nullptr;
+    godot::Ref<godot::AudioEffectCapture> _effect;
 
     godot::Ref<godot::Semaphore> _model_semaphore = nullptr;
     godot::Ref<godot::Semaphore> _bus_semaphore = nullptr;

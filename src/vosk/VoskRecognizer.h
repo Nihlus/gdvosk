@@ -63,7 +63,9 @@ namespace gdvosk
         [[nodiscard]] bool get_use_nlsml_output() const;
         void set_use_nlsml_output(bool use_nlsml_output);
 
-        godot::Error accept_waveform(const godot::Ref<godot::AudioStreamWAV>& stream);
+        godot::Error accept_stream(const godot::Ref<godot::AudioStreamWAV>& stream);
+
+        godot::Error accept_samples(const godot::PackedVector2Array& samples);
 
         godot::Dictionary get_result();
 
@@ -77,6 +79,7 @@ namespace gdvosk
         void update_recognizer_parameters();
 
         static godot::PackedByteArray mix_stereo_to_mono(const godot::PackedByteArray& data);
+        static godot::PackedFloat32Array mix_stereo_to_mono(const godot::PackedVector2Array& data);
         static godot::Dictionary parse_dictionary(const godot::String& data);
     };
 }

@@ -25,7 +25,7 @@ Error gdvosk::VoskRecognizer::setup
     _sample_rate = sample_rate;
     _speaker_model = speaker_model;
 
-    _recognizer = speaker_model == nullptr
+    _recognizer = speaker_model != nullptr
             ? vosk_recognizer_new_spk(_model->get_ptr(), _sample_rate, _speaker_model->get_ptr())
             : vosk_recognizer_new(_model->get_ptr(), _sample_rate);
 
@@ -41,9 +41,9 @@ Error gdvosk::VoskRecognizer::setup
 
 Error gdvosk::VoskRecognizer::setup_with_grammar
 (
-        const godot::Ref<VoskModel>& model,
-        float sample_rate,
-        const godot::PackedStringArray& grammar
+    const godot::Ref<VoskModel>& model,
+    float sample_rate,
+    const godot::PackedStringArray& grammar
 )
 {
     if (_recognizer != nullptr)
@@ -141,7 +141,7 @@ void gdvosk::VoskRecognizer::set_use_nlsml_output(bool use_nlsml_output)
 
     if (_recognizer != nullptr)
     {
-        vosk_recognizer_set_nlsml(_recognizer, use_nlsml_output);
+        vosk_recognizer_set_nlsml(_recognizer, use_nlsml_output ? 1 : 0);
     }
 }
 
@@ -163,7 +163,7 @@ void gdvosk::VoskRecognizer::update_recognizer_parameters()
     vosk_recognizer_set_nlsml(_recognizer, _use_nlsml_output);
 }
 
-godot::Error gdvosk::VoskRecognizer::accept_waveform(const Ref<godot::AudioStreamWAV>& stream)
+godot::Error gdvosk::VoskRecognizer::accept_stream(const Ref<godot::AudioStreamWAV>& stream)
 {
     auto data = stream->is_stereo()
         ? mix_stereo_to_mono(stream->get_data())
@@ -172,6 +172,27 @@ godot::Error gdvosk::VoskRecognizer::accept_waveform(const Ref<godot::AudioStrea
     auto* ptr = reinterpret_cast<const char*>(data.ptr());
 
     auto result = vosk_recognizer_accept_waveform(_recognizer, ptr, static_cast<int>(data.size()));
+    if (result >= 1)
+    {
+        return OK;
+    }
+
+    if (result == 0)
+    {
+        // this is a bit of a hack... it's not really an error, but the recognizer is busy decoding the current
+        // utterance and you should continue giving it data until it either says OK or FAILED. You can retrieve the
+        // current best guess using partial_result if ERR_BUSY is returned.
+        return ERR_BUSY;
+    }
+
+    return FAILED;
+}
+
+godot::Error gdvosk::VoskRecognizer::accept_samples(const PackedVector2Array& samples)
+{
+    auto data = mix_stereo_to_mono(samples);
+
+    auto result = vosk_recognizer_accept_waveform_f(_recognizer, data.ptr(), static_cast<int>(data.size()));
     if (result >= 1)
     {
         return OK;
@@ -204,15 +225,30 @@ godot::PackedByteArray gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedBy
     auto output_index = 0;
     for (auto i = 0; i < data.size(); i += 4)
     {
-        const auto left_channel = static_cast<int16_t>(data[i]);
-        const auto right_channel = static_cast<int16_t>(data[i + 2]);
+        const auto left_channel = *reinterpret_cast<const int16_t*>(&data.ptr()[i]);
+        const auto right_channel = *reinterpret_cast<const int16_t*>(&data.ptr()[i + 2]);
 
-        const auto mixed = static_cast<int16_t>((left_channel + right_channel) / 2);
+        const auto mixed = (int32_t(left_channel) + right_channel) / 2;
 
-        output[output_index] = static_cast<uint8_t>(mixed & 0xFF00);
-        output[output_index + 1] = static_cast<uint8_t>((mixed & 0x00FF) << 8);
+        reinterpret_cast<int16_t*>(output.ptrw())[output_index] = static_cast<int16_t>(mixed);
+        output_index += 1;
+    }
 
-        output_index += 2;
+    return output;
+}
+
+godot::PackedFloat32Array gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedVector2Array& data)
+{
+    PackedFloat32Array output;
+    output.resize(data.size());
+
+    for (auto i = 0; i < data.size(); ++i)
+    {
+        auto& sample = data[i];
+        auto mixed = Math::clamp((sample.x + sample.y) / 2.0f, -1.0f, 1.0f);
+
+        // vosk expects -32768 to 32768, not -1 to 1
+        output[i] = mixed * 32768;
     }
 
     return output;
@@ -253,19 +289,21 @@ godot::Dictionary gdvosk::VoskRecognizer::get_final_result()
 
 godot::Dictionary gdvosk::VoskRecognizer::parse_dictionary(const String& data)
 {
-    JSON parsed;
-    auto parse_result = parsed.parse(String(data));
+    Ref<JSON> parsed;
+    parsed.instantiate();
+
+    auto parse_result = parsed->parse(String(data));
     if (parse_result != OK)
     {
         return { };
     }
 
-    if (parsed.get_data().get_type() != Variant::DICTIONARY)
+    if (parsed->get_data().get_type() != Variant::DICTIONARY)
     {
         return { };
     }
 
-    return parsed.get_data();
+    return parsed->get_data();
 }
 
 void gdvosk::VoskRecognizer::reset()
@@ -277,7 +315,8 @@ void gdvosk::VoskRecognizer::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("setup"), &VoskRecognizer::setup);
     ClassDB::bind_method(D_METHOD("setup_with_grammar"), &VoskRecognizer::setup_with_grammar);
-    ClassDB::bind_method(D_METHOD("accept_waveform"), &VoskRecognizer::accept_waveform);
+    ClassDB::bind_method(D_METHOD("accept_stream"), &VoskRecognizer::accept_stream);
+    ClassDB::bind_method(D_METHOD("accept_samples"), &VoskRecognizer::accept_samples);
     ClassDB::bind_method(D_METHOD("get_result"), &VoskRecognizer::get_result);
     ClassDB::bind_method(D_METHOD("get_partial_result"), &VoskRecognizer::get_partial_result);
     ClassDB::bind_method(D_METHOD("get_final_result"), &VoskRecognizer::get_final_result);

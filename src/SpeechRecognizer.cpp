@@ -1,17 +1,20 @@
-//
-// Created by jarl on 2024-08-16.
-//
+// Copyright (C) 2024 Jarl Gullberg
+// SPDX-License-Identifier: MIT
+
 
 #include "SpeechRecognizer.h"
+#include "helpers/semaphore_lock.h"
 #include "vosk/VoskRecognizer.h"
 
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <chrono>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace std::chrono;
 using namespace godot;
+using namespace gdvosk;
 
 void SpeechRecognizer::_bind_methods()
 {
@@ -72,9 +75,9 @@ PackedStringArray SpeechRecognizer::_get_configuration_warnings() const
     {
         warnings.append("No valid audio bus has been configured");
     }
-    else if (_recording_effect == nullptr)
+    else if (_effect == nullptr)
     {
-        warnings.append("No valid recording effect has been detected on the configured bus");
+        warnings.append("No valid capture effect has been detected on the configured bus");
     }
     else if (_vosk_model == nullptr)
     {
@@ -96,12 +99,6 @@ void SpeechRecognizer::_ready()
     {
         // TODO: warn
     }
-
-    _model_semaphore.instantiate();
-    _model_semaphore->post();
-
-    _bus_semaphore.instantiate();
-    _bus_semaphore->post();
 
     update_bus_data();
 }
@@ -136,10 +133,9 @@ int SpeechRecognizer::get_recording_effect_index() const
     return _recording_effect_index;
 }
 
-
 void SpeechRecognizer::set_silence_timeout(float silence_timeout)
 {
-    _silence_timeout = round<nanoseconds>(duration<float>(silence_timeout));;
+    _silence_timeout = round<nanoseconds>(duration<float>(silence_timeout));
 }
 
 float SpeechRecognizer::get_silence_timeout() const
@@ -149,12 +145,10 @@ float SpeechRecognizer::get_silence_timeout() const
 
 void SpeechRecognizer::set_vosk_model(const godot::Ref<gdvosk::VoskModel>& vosk_model)
 {
-    _model_semaphore->wait();
+    semaphore_lock lock(_model_semaphore);
 
     _vosk_model = vosk_model;
     update_vosk_data();
-
-    _model_semaphore->post();
 }
 
 godot::Ref<gdvosk::VoskModel> SpeechRecognizer::get_vosk_model() const
@@ -169,11 +163,10 @@ void SpeechRecognizer::update_bus_data()
     _recording_bus_index = audio_server->get_bus_index(_recording_bus_name);
     if (_recording_bus_index < 0)
     {
-        _bus_semaphore->wait();
         {
-            _recording_effect.unref();
+            semaphore_lock lock(_bus_semaphore);
+            _effect.unref();
         }
-        _bus_semaphore->post();
 
         update_configuration_warnings();
         return;
@@ -181,36 +174,33 @@ void SpeechRecognizer::update_bus_data()
 
     if (audio_server->get_bus_effect_count(_recording_bus_index) < 1)
     {
-        _bus_semaphore->wait();
         {
-            _recording_effect.unref();
+            semaphore_lock lock(_bus_semaphore);
+            _effect.unref();
         }
-        _bus_semaphore->post();
 
         update_configuration_warnings();
         return;
     }
 
     auto effect = audio_server->get_bus_effect(_recording_bus_index, _recording_effect_index);
-    auto recording_effect = cast_to<AudioEffectRecord>(effect.ptr());
 
-    if (recording_effect == nullptr)
+    auto capture_effect = cast_to<AudioEffectCapture>(effect.ptr());
+    if (capture_effect != nullptr)
     {
-        _bus_semaphore->wait();
         {
-            _recording_effect.unref();
+            semaphore_lock lock(_bus_semaphore);
+            _effect = effect;
         }
-        _bus_semaphore->post();
 
         update_configuration_warnings();
         return;
     }
 
-    _bus_semaphore->wait();
     {
-        _recording_effect = effect;
+        semaphore_lock lock(_bus_semaphore);
+        _effect.unref();
     }
-    _bus_semaphore->post();
 
     update_configuration_warnings();
 }
@@ -253,49 +243,63 @@ void SpeechRecognizer::start_voice_recognition()
 
 void SpeechRecognizer::worker_main()
 {
-    constexpr auto interval_usec = duration_cast<microseconds>(milliseconds(200));
+    constexpr auto interval_usec = duration_cast<microseconds>(milliseconds(100));
+    constexpr auto interval_sec = duration_cast<duration<float>>(interval_usec);
 
     std::optional<Dictionary> partial_result;
     std::optional<steady_clock::time_point> no_change_time_start;
+
+    bool has_set_up = false;
+    Ref<gdvosk::VoskRecognizer> recognizer;
+    recognizer.instantiate();
 
     while (_should_worker_run)
     {
         OS::get_singleton()->delay_usec(interval_usec.count());
 
-        Ref<AudioStreamWAV> recording;
-        _bus_semaphore->wait();
+        //
+        PackedVector2Array data;
+        int mix_rate = 44100;
+
         {
-            if (_recording_effect == nullptr || !_recording_effect->is_recording_active())
+            semaphore_lock lock(_bus_semaphore);
+            if (_effect == nullptr)
             {
-                _bus_semaphore->post();
                 continue;
             }
 
-            recording = _recording_effect->get_recording();
-            if (!recording.is_valid())
+            // capture mode
+            mix_rate = ProjectSettings::get_singleton()->get_setting("audio/driver/mix_rate", mix_rate);
+
+            // grab at most all the audio between last iteration and this iteration
+            auto sample_count = static_cast<int32_t>
+            (
+                std::round(static_cast<float>(mix_rate) / interval_sec.count())
+            );
+
+            auto frame_count = std::min(_effect->get_frames_available(), sample_count);
+            auto samples = _effect->get_buffer(frame_count);
+            data = samples;
+        }
+
+        if (!has_set_up)
+        {
+            Error setup;
             {
-                _bus_semaphore->post();
+                semaphore_lock lock(_model_semaphore);
+                setup = recognizer->setup(_vosk_model, static_cast<float>(mix_rate));
+            }
+
+            if (setup != OK)
+            {
                 continue;
             }
-        }
-        _bus_semaphore->post();
 
-        Ref<gdvosk::VoskRecognizer> recognizer;
-        recognizer.instantiate();
-
-        Error setup;
-        _model_semaphore->wait();
-        {
-            setup = recognizer->setup(_vosk_model, static_cast<float>(recording->get_mix_rate()));
-        }
-        _model_semaphore->post();
-
-        if (setup != OK)
-        {
-            continue;
+            has_set_up = true;
         }
 
-        auto accept_waveform = recognizer->accept_waveform(recording);
+        auto accept_waveform = recognizer->accept_samples(data);
+
         switch (accept_waveform)
         {
             case ERR_BUSY:

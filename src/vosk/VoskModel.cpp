@@ -4,8 +4,6 @@
 #include "VoskModel.h"
 
 #include <godot_cpp/classes/project_settings.hpp>
-#include <godot_cpp/classes/dir_access.hpp>
-#include <godot_cpp/classes/zip_reader.hpp>
 
 using namespace gdvosk;
 using namespace godot;

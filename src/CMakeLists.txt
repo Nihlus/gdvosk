@@ -8,6 +8,7 @@ target_sources(${PROJECT_NAME}
 		vosk/VoskModelResourceLoader.cpp
 		vosk/VoskRecognizer.cpp
 		vosk/VoskSpeakerModel.cpp
+		helpers/semaphore_lock.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
