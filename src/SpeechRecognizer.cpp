@@ -18,49 +18,14 @@ using namespace gdvosk;
 
 void SpeechRecognizer::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("get_recording_bus_name"), &SpeechRecognizer::get_recording_bus_name);
-    ClassDB::bind_method(D_METHOD("set_recording_bus_name"), &SpeechRecognizer::set_recording_bus_name);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::STRING, "recording_bus_name", PROPERTY_HINT_NONE),
-        "set_recording_bus_name",
-        "get_recording_bus_name"
-    );
-
-    ClassDB::bind_method(D_METHOD("get_recording_effect_index"), &SpeechRecognizer::get_recording_effect_index);
-    ClassDB::bind_method(D_METHOD("set_recording_effect_index"), &SpeechRecognizer::set_recording_effect_index);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::INT, "recording_effect_index", PROPERTY_HINT_NONE),
-        "set_recording_effect_index",
-        "get_recording_effect_index"
-    );
-
-    ClassDB::bind_method(D_METHOD("get_vosk_model"), &SpeechRecognizer::get_vosk_model);
-    ClassDB::bind_method(D_METHOD("set_vosk_model"), &SpeechRecognizer::set_vosk_model);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::OBJECT, "vosk_model", PROPERTY_HINT_RESOURCE_TYPE, "VoskModel"),
-        "set_vosk_model",
-        "get_vosk_model"
-    );
-
-    ClassDB::bind_method(D_METHOD("get_silence_timeout"), &SpeechRecognizer::get_silence_timeout);
-    ClassDB::bind_method(D_METHOD("set_silence_timeout"), &SpeechRecognizer::set_silence_timeout);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::FLOAT, "silence_timeout", PROPERTY_HINT_NONE),
-        "set_silence_timeout",
-        "get_silence_timeout"
-    );
+    REGISTER_GODOT_PROPERTY(Variant::STRING, recording_bus_name)
+    REGISTER_GODOT_PROPERTY(Variant::INT, capture_effect_index)
+    REGISTER_GODOT_PROPERTY_WITH_HINT(Variant::OBJECT, vosk_model, PROPERTY_HINT_RESOURCE_TYPE, "VoskModel")
+    REGISTER_GODOT_PROPERTY(Variant::FLOAT, silence_timeout)
 
     ADD_SIGNAL(MethodInfo("partial_result", PropertyInfo(Variant::DICTIONARY, "data")));
     ADD_SIGNAL(MethodInfo("result", PropertyInfo(Variant::DICTIONARY, "data")));
     ADD_SIGNAL(MethodInfo("final_result", PropertyInfo(Variant::DICTIONARY, "data")));
-
-    // callables
-    ClassDB::bind_method(D_METHOD("worker_main"), &SpeechRecognizer::worker_main);
-    ClassDB::bind_method(D_METHOD("update_bus_data"), &SpeechRecognizer::update_bus_data);
 }
 
 void SpeechRecognizer::_exit_tree()
@@ -113,14 +78,14 @@ void SpeechRecognizer::set_recording_bus_name(const StringName& recording_bus_na
     }
 }
 
-const StringName& SpeechRecognizer::get_recording_bus_name() const
+StringName SpeechRecognizer::get_recording_bus_name() const
 {
     return _recording_bus_name;
 }
 
-void SpeechRecognizer::set_recording_effect_index(int recording_effect_index)
+void SpeechRecognizer::set_capture_effect_index(int recording_effect_index)
 {
-    _recording_effect_index = recording_effect_index;
+    _capture_effect_index = recording_effect_index;
 
     if (is_node_ready())
     {
@@ -128,9 +93,9 @@ void SpeechRecognizer::set_recording_effect_index(int recording_effect_index)
     }
 }
 
-int SpeechRecognizer::get_recording_effect_index() const
+int SpeechRecognizer::get_capture_effect_index() const
 {
-    return _recording_effect_index;
+    return _capture_effect_index;
 }
 
 void SpeechRecognizer::set_silence_timeout(float silence_timeout)
@@ -183,7 +148,7 @@ void SpeechRecognizer::update_bus_data()
         return;
     }
 
-    auto effect = audio_server->get_bus_effect(_recording_bus_index, _recording_effect_index);
+    auto effect = audio_server->get_bus_effect(_recording_bus_index, _capture_effect_index);
 
     auto capture_effect = cast_to<AudioEffectCapture>(effect.ptr());
     if (capture_effect != nullptr)

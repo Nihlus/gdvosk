@@ -18,61 +18,92 @@
 #include <vosk/vosk_api.h>
 #include <godot_cpp/classes/semaphore.hpp>
 #include "vosk/VoskModel.h"
+#include "helpers/auto_property.h"
 
-class SpeechRecognizer : public godot::Node
+namespace gdvosk
 {
-    GDCLASS(SpeechRecognizer, godot::Node)
-
-    std::atomic_bool _should_worker_run = false;
-    godot::Ref<godot::Thread> _worker = nullptr;
-
-    int _recording_bus_index = 0;
-    godot::Ref<godot::AudioEffectCapture> _effect;
-
-    godot::Ref<godot::Semaphore> _model_semaphore = nullptr;
-    godot::Ref<godot::Semaphore> _bus_semaphore = nullptr;
-
-    /*
-     * Properties
+    /**
+     * Acts as a continuous speech recognizer, producing results via signals over time via a background thread.
      */
-    godot::StringName _recording_bus_name = "";
-    int _recording_effect_index = 0;
-    godot::Ref<gdvosk::VoskModel> _vosk_model = nullptr;
-    std::atomic<std::chrono::nanoseconds> _silence_timeout = std::chrono::nanoseconds(2000000000);
+    class SpeechRecognizer : public godot::Node
+    {
+        GDCLASS(SpeechRecognizer, godot::Node)
 
-protected:
-    static void _bind_methods();
+        /**
+         * Holds the control variable for the background processing thread.
+         */
+        std::atomic_bool _should_worker_run = false;
 
-public:
-    explicit SpeechRecognizer();
+        /**
+         * Holds the background thread.
+         */
+        godot::Ref<godot::Thread> _worker = nullptr;
 
-    void _exit_tree() override;
+        /**
+         * Holds the index of the recording bus.
+         */
+        int _recording_bus_index = 0;
 
-    [[nodiscard]] godot::PackedStringArray _get_configuration_warnings() const override;
+        /**
+         * Holds a reference to the capture effect on the recording bus.
+         */
+        godot::Ref<godot::AudioEffectCapture> _effect;
 
-    void _ready() override;
+        /**
+         * Holds a semaphore used for synchronization with the background thread when accessing the Vosk model.
+         */
+        godot::Ref<godot::Semaphore> _model_semaphore = nullptr;
 
-    void set_recording_bus_name(const godot::StringName& recording_bus_name);
-    [[nodiscard]] const godot::StringName& get_recording_bus_name() const;
+        /**
+         * Holds a semaphore used for synchronization with the background thread when accessing audio bus objects.
+         */
+        godot::Ref<godot::Semaphore> _bus_semaphore = nullptr;
 
-    void set_recording_effect_index(int recording_effect_index);
-    [[nodiscard]] int get_recording_effect_index() const;
+        /**
+         * Gets or sets the name of the recording bus.
+         */
+        GODOT_PROPERTY(godot::StringName, recording_bus_name, "")
 
-    void set_vosk_model(const godot::Ref<gdvosk::VoskModel>& vosk_model);
-    [[nodiscard]] godot::Ref<gdvosk::VoskModel> get_vosk_model() const;
+        /**
+         * Gets or sets the index of the capture effect.
+         */
+        GODOT_PROPERTY(int, capture_effect_index, 0)
 
-    void set_silence_timeout(float silence_timeout);
-    [[nodiscard]] float get_silence_timeout() const;
+        /**
+         * Gets or sets the Vosk language model to use.
+         */
+        GODOT_PROPERTY(godot::Ref<gdvosk::VoskModel>, vosk_model, nullptr)
 
-private:
-    void update_bus_data();
-    void update_vosk_data();
+        /**
+         * Holds the backing data for the silence timeout.
+         */
+        std::atomic<std::chrono::nanoseconds> _silence_timeout = std::chrono::nanoseconds(2000000000);
 
-    void stop_voice_recognition();
-    void start_voice_recognition();
+    protected:
+        static void _bind_methods();
 
-    void worker_main();
+    public:
+        /**
+         * Initializes a new instance of the SpeechRecognizer class.
+         */
+        explicit SpeechRecognizer();
 
-};
+        void set_silence_timeout(float silence_timeout);
+        [[nodiscard]] float get_silence_timeout() const;
+
+        void _ready() override;
+        void _exit_tree() override;
+        [[nodiscard]] godot::PackedStringArray _get_configuration_warnings() const override;
+
+    private:
+        void update_bus_data();
+        void update_vosk_data();
+
+        void stop_voice_recognition();
+        void start_voice_recognition();
+
+        void worker_main();
+    };
+}
 
 #endif //SPEECHRECOGNIZER_H
