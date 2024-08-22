@@ -1,7 +1,39 @@
-[gd_scene load_steps=2 format=3 uid="uid://dx7h3r4e5iji8"]
+[gd_scene load_steps=4 format=3 uid="uid://cxyg85rb1s852"]
 
-[ext_resource type="VoskModel" path="res://vosk-model-small-en-us-0.15.vosk" id="1_biiuu"]
+[ext_resource type="VoskModel" path="res://vosk-model-small-en-us-0.15.vosk" id="1_bqtus"]
 
-[node name="SpeechRecognizer" type="SpeechRecognizer"]
+[sub_resource type="GDScript" id="GDScript_mc2fg"]
+script/source = "extends Node3D
+
+@onready var player := $AudioStreamPlayer as AudioStreamPlayer
+@onready var effect :=  AudioServer.get_bus_effect(AudioServer.get_bus_index(\"Record\"), 0) as AudioEffectCapture
+
+func _ready() -> void:
+    self.player.play()
+
+func _on_speech_recognizer_result(data: Dictionary) -> void:
+    print(data)
+
+func _on_speech_recognizer_partial_result(data: Dictionary) -> void:
+    print(data)
+
+func _on_speech_recognizer_final_result(data: Dictionary) -> void:
+    print(data)
+"
+
+[sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_pqcnc"]
+
+[node name="Root" type="Node3D"]
+script = SubResource("GDScript_mc2fg")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamMicrophone_pqcnc")
+bus = &"Record"
+
+[node name="SpeechRecognizer" type="SpeechRecognizer" parent="."]
 recording_bus_name = &"Record"
-vosk_model = ExtResource("1_biiuu")
+vosk_model = ExtResource("1_bqtus")
+
+[connection signal="final_result" from="SpeechRecognizer" to="." method="_on_speech_recognizer_final_result"]
+[connection signal="partial_result" from="SpeechRecognizer" to="." method="_on_speech_recognizer_partial_result"]
+[connection signal="result" from="SpeechRecognizer" to="." method="_on_speech_recognizer_result"]
