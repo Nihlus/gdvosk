@@ -51,7 +51,8 @@ void uninitialize_gdvosk_module(ModuleInitializationLevel p_level)
     _model_loader.unref();
 }
 
-extern "C" {
+extern "C"
+{
     GDExtensionBool GDE_EXPORT gdvosk_library_init
     (
         GDExtensionInterfaceGetProcAddress p_get_proc_address, 

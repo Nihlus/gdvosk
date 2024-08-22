@@ -5,6 +5,7 @@
 [sub_resource type="GDScript" id="GDScript_mc2fg"]
 script/source = "extends Node3D
 
+@onready var speech_recognizer := $SpeechRecognizer as SpeechRecognizer
 @onready var player := $AudioStreamPlayer as AudioStreamPlayer
 @onready var effect :=  AudioServer.get_bus_effect(AudioServer.get_bus_index(\"Record\"), 0) as AudioEffectCapture
 
