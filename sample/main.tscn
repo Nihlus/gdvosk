@@ -12,6 +12,27 @@ script/source = "extends Node3D
 func _ready() -> void:
     self.player.play()
 
+    var model := load(\"res://vosk-model-small-en-us-0.15.vosk\") as VoskModel
+    var stream := load(\"res://test-mono-44100.wav\") as AudioStreamWAV
+
+    var samples : PackedVector2Array
+    var file := FileAccess.open(\"res://test-stereo-44100.raw\", FileAccess.READ)
+    while file.get_position() < file.get_length():
+        samples.push_back(Vector2(file.get_float(), file.get_float()))
+
+    var recognizer = VoskRecognizer.new()
+    recognizer.setup(model, 44100, null)
+
+    recognizer.accept_samples(samples)
+    print(recognizer.get_final_result())
+
+    recognizer.reset()
+
+    recognizer.accept_stream(stream)
+    print(recognizer.get_final_result())
+
+    recognizer.reset()
+
 func _on_speech_recognizer_result(data: Dictionary) -> void:
     print(data)
 
