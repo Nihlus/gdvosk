@@ -1,5 +1,22 @@
 # generate import library
 if (MSVC)
+    get_filename_component(CMAKE_C_COMPILER_DIRECTORY "${CMAKE_C_COMPILER}" DIRECTORY CACHE)
+
+    find_program(DUMPBIN_EXE
+        NAMES
+            dumpbin
+        PATHS
+            ${CMAKE_C_COMPILER_DIRECTORY}
+        REQUIRED
+    )
+    find_program(LIB_EXE
+        NAMES
+            lib
+        PATHS
+            ${CMAKE_C_COMPILER_DIRECTORY}
+        REQUIRED
+    )
+
     find_file(Vosk_SHARED_LIBRARY
         NAMES
             vosk.dll
@@ -17,8 +34,8 @@ if (MSVC)
     set(Vosk_LIB_FILE ${Vosk_SHARED_LIBRARY})
     string(REPLACE .dll .lib Vosk_LIB_FILE ${Vosk_LIB_FILE})
 
-    execute_process(dumpbin /exports ${Vosk_SHARED_LIBRARY} > DEF_FILE.def)
-    execute_process(lib /def:${Vosk_DEFINITION_FILE} /out:${Vosk_LIB_FILE} /machine:${CMAKE_SYSTEM_PROCESSOR})
+    execute_process(${DUMPBIN_EXE} /exports ${Vosk_SHARED_LIBRARY} > DEF_FILE.def)
+    execute_process(${LIB_EXE} /def:${Vosk_DEFINITION_FILE} /out:${Vosk_LIB_FILE} /machine:${CMAKE_SYSTEM_PROCESSOR})
 endif ()
 
 find_library(Vosk_LIBRARY
