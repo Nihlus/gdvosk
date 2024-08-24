@@ -3,7 +3,7 @@ entry_symbol = "gdvosk_library_init"
 compatibility_minimum = 4.3
 
 [icons]
-Example = "icons/Example.svg"
+SpeechRecognizer = "icons/SpeechRecognizer.svg"
 
 [libraries]
 android.debug.arm32 = "lib/android/arm32/libgdvosk-d.so"
