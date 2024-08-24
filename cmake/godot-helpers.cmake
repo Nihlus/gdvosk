@@ -10,8 +10,6 @@ string(REGEX REPLACE "^x86$" x86_32 GODOT_ARCH ${GODOT_ARCH})
 string(REGEX REPLACE "^aarch64$" arm64 GODOT_ARCH ${GODOT_ARCH})
 string(REGEX REPLACE "^armv7-a$" arm32 GODOT_ARCH ${GODOT_ARCH})
 
-message(STATUS ${GODOT_ARCH})
-
 if (APPLE)
     set(GODOT_ARCH "universal")
 endif ()
