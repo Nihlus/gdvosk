@@ -209,7 +209,8 @@ void SpeechRecognizer::start_voice_recognition()
 void SpeechRecognizer::worker_main()
 {
     constexpr auto interval_usec = duration_cast<microseconds>(milliseconds(100));
-    constexpr auto interval_sec = duration_cast<duration<float>>(interval_usec);
+
+    auto mix_rate = ProjectSettings::get_singleton()->get_setting("audio/driver/mix_rate", 44100);
 
     std::optional<Dictionary> partial_result;
     std::optional<steady_clock::time_point> no_change_time_start;
@@ -224,8 +225,6 @@ void SpeechRecognizer::worker_main()
 
         //
         PackedVector2Array data;
-        int mix_rate = 44100;
-
         {
             semaphore_lock lock(_bus_semaphore);
             if (_effect == nullptr)
@@ -233,17 +232,7 @@ void SpeechRecognizer::worker_main()
                 continue;
             }
 
-            // capture mode
-            mix_rate = ProjectSettings::get_singleton()->get_setting("audio/driver/mix_rate", mix_rate);
-
-            // grab at most all the audio between last iteration and this iteration
-            auto sample_count = static_cast<int32_t>
-            (
-                std::round(static_cast<float>(mix_rate) / interval_sec.count())
-            );
-
-            auto frame_count = std::min(_effect->get_frames_available(), sample_count);
-            auto samples = _effect->get_buffer(frame_count);
+            auto samples = _effect->get_buffer(_effect->get_frames_available());
             data = samples;
         }
 
