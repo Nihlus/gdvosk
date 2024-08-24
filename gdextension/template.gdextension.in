@@ -26,6 +26,9 @@ windows.release.x86_32 = "lib/windows/x86_32/libgdvosk.dll"
 windows.debug.x86_64 = "lib/windows/x86_64/libgdvosk-d.dll"
 windows.release.x86_64 = "lib/windows/x86_64/libgdvosk.dll"
 
+web.debug.wasm32 = "lib/web/wasm32/libgdvosk-d.so"
+web.release.wasm32 = "lib/web/wasm32/libgdvosk.so"
+
 [dependencies]
 android.debug = {
     "lib/android/arm32/libvosk.so" : "",
@@ -65,4 +68,12 @@ windows.debug = {
 windows.release = {
     "lib/windows/x86_32/libvosk.dll" : "",
     "lib/windows/x86_64/libvosk.dll" : ""
+}
+
+web.debug = {
+    "lib/web/wasm32/libvosk.so" : ""
+}
+
+web.release = {
+    "lib/web/wasm32/libvosk.so" : ""
 }
