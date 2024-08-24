@@ -9,6 +9,8 @@
 
 namespace gdvosk
 {
+    class VoskRecognizer;
+
     /**
      * Represents a Vosk language model as a Godot resource.
      */
@@ -16,7 +18,7 @@ namespace gdvosk
     {
         GDCLASS(VoskModel, godot::Resource)
 
-        friend class VoskRecognizer;
+        friend class gdvosk::VoskRecognizer;
 
         /**
          * Holds the underlying pointer to the model.
