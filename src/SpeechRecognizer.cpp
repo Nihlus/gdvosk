@@ -9,10 +9,8 @@
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
-#include <chrono>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-using namespace std::chrono;
 using namespace godot;
 using namespace gdvosk;
 
@@ -84,12 +82,12 @@ StringName SpeechRecognizer::get_recording_bus_name() const
 
 void SpeechRecognizer::set_silence_timeout(float silence_timeout)
 {
-    _silence_timeout = round<nanoseconds>(duration<float>(silence_timeout));
+    _silence_timeout = static_cast<uint32_t>(std::round(silence_timeout * 1000000.0f));
 }
 
 float SpeechRecognizer::get_silence_timeout() const
 {
-    return duration_cast<duration<float>>(_silence_timeout.load()).count();
+    return static_cast<float>(_silence_timeout) / 1000000.0f;
 }
 
 void SpeechRecognizer::set_vosk_model(const godot::Ref<gdvosk::VoskModel>& vosk_model)
@@ -196,12 +194,12 @@ void SpeechRecognizer::start_voice_recognition()
 
 void SpeechRecognizer::worker_main()
 {
-    constexpr auto interval_usec = duration_cast<microseconds>(milliseconds(100));
+    constexpr auto interval_usec = 100000;
 
     auto mix_rate = ProjectSettings::get_singleton()->get_setting("audio/driver/mix_rate", 44100);
 
     std::optional<Dictionary> partial_result;
-    std::optional<steady_clock::time_point> no_change_time_start;
+    std::optional<uint64_t> no_change_time_start;
 
     bool has_set_up = false;
     Ref<gdvosk::VoskRecognizer> recognizer;
@@ -209,7 +207,7 @@ void SpeechRecognizer::worker_main()
 
     while (_should_worker_run)
     {
-        OS::get_singleton()->delay_usec(interval_usec.count());
+        OS::get_singleton()->delay_usec(interval_usec);
 
         //
         PackedVector2Array data;
@@ -250,7 +248,7 @@ void SpeechRecognizer::worker_main()
                 if (!partial_result.has_value() || partial_result != new_partial_result)
                 {
                     partial_result = new_partial_result;
-                    no_change_time_start = steady_clock::now();
+                    no_change_time_start = Time::get_singleton()->get_ticks_usec();
 
                     call_deferred("emit_signal", "partial_result", *partial_result);
                 }
@@ -269,7 +267,7 @@ void SpeechRecognizer::worker_main()
             }
         }
 
-        auto now = steady_clock::now();
+        auto now = Time::get_singleton()->get_ticks_usec();
         if (no_change_time_start.has_value() && (now - *no_change_time_start > _silence_timeout.load()))
         {
             call_deferred("emit_signal", "final_result", recognizer->get_final_result());

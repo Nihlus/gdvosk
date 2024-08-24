@@ -70,9 +70,9 @@ namespace gdvosk
         GODOT_PROPERTY(godot::Ref<gdvosk::VoskModel>, vosk_model, nullptr)
 
         /**
-         * Holds the backing data for the silence timeout.
+         * Holds the backing data for the silence timeout in microseconds.
          */
-        std::atomic<std::chrono::nanoseconds> _silence_timeout = std::chrono::nanoseconds(2000000000);
+        std::atomic_uint32_t _silence_timeout = 2000000000;
 
     protected:
         static void _bind_methods();
