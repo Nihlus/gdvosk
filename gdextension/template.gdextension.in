@@ -69,11 +69,3 @@ windows.release = {
     "lib/windows/x86_32/libvosk.dll" : "",
     "lib/windows/x86_64/libvosk.dll" : ""
 }
-
-web.debug = {
-    "lib/web/wasm32/libvosk.so" : ""
-}
-
-web.release = {
-    "lib/web/wasm32/libvosk.so" : ""
-}
