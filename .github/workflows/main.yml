@@ -104,6 +104,7 @@ jobs:
             ${{ github.workspace }}/install-${{ matrix.build_type }}/*
 
   upload:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Upload merged artifact
