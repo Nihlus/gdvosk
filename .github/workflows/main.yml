@@ -106,14 +106,8 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload merged artifact (Debug)
+      - name: Upload merged artifact
         uses: actions/upload-artifact/merge@v4
         with:
           name: ${{ github.event.repository.name }}-debug
-          pattern: '*-${{ github.event.repository.name }}-Debug'
-
-      - name: Upload merged artifact (Release)
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: ${{ github.event.repository.name }}-release
-          pattern: '*-${{ github.event.repository.name }}-Release'
+          pattern: '*-${{ github.event.repository.name }}-*'
