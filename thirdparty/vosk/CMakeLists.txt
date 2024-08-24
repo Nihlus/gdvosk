@@ -10,10 +10,22 @@ find_library(Vosk_LIBRARY
 )
 
 add_library(Vosk SHARED IMPORTED GLOBAL)
-set_target_properties(Vosk
-    PROPERTIES
-        IMPORTED_LOCATION "${Vosk_LIBRARY}"
-)
+
+if (MSVC)
+    set(Vosk_LIB ${Vosk_LIBRARY})
+    string(REPLACE .lib .dll Vosk_LIB ${Vosk_LIB})
+
+    set_target_properties(Vosk
+        PROPERTIES
+            IMPORTED_IMPLIB "${Vosk_LIBRARY}"
+            IMPORTED_LOCATION "${Vosk_LIB}"
+    )
+else ()
+    set_target_properties(Vosk
+        PROPERTIES
+            IMPORTED_LOCATION "${Vosk_LIBRARY}"
+    )
+endif ()
 
 target_include_directories(Vosk
     INTERFACE
