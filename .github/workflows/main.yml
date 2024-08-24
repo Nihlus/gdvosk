@@ -110,5 +110,5 @@ jobs:
       - name: Upload merged artifact
         uses: actions/upload-artifact/merge@v4
         with:
-          name: ${{ github.event.repository.name }}-debug
+          name: ${{ github.event.repository.name }}
           pattern: '*-${{ github.event.repository.name }}-*'
