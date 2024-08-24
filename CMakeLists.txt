@@ -64,8 +64,8 @@ include(GitVersionInfo)
 
 add_subdirectory(src)
 
-# Install library, extension file, and support files in ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
-if (NOT "${CMAKE_INSTALL_PREFIX}")
+# set a default value for CMAKE_INSTALL_PREFIX
+if (NOT CMAKE_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
 endif ()
 
