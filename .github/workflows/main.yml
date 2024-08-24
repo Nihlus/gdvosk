@@ -59,7 +59,6 @@ jobs:
           -B cmake-build
           -G "Ninja"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DCMAKE_FIND_DEBUG_MODE=ON
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
 
