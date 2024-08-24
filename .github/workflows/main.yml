@@ -18,6 +18,7 @@ jobs:
           - { name: '🪟 Windows MSVC', os: windows-latest, target: windows, arch: x86_64 }
           - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a }
           - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a }
+          - { name: '🌐 Web WASM32', os: ubuntu-latest, target: web, arch: wasm32 }
 
     name: 🛠 Build / ${{ matrix.config.name }} (${{ matrix.build_type }})
     runs-on: ${{ matrix.config.os }}
@@ -37,6 +38,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build
+
+      - name: Install Dependencies (Web)
+        if: matrix.config.target == 'web'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emscripten
 
       - name: Setup Android NDK (Android)
         if: matrix.config.target == 'android'
@@ -63,7 +70,20 @@ jobs:
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
       - name: Configure
-        if: matrix.config.target != 'android'
+        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web') }}
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Ninja"
+          -DCMAKE_TOOLCHAIN_FILE=/usr/share/emscripten/cmake/Modules/Platform/Emscripten.cmake
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          .
+
+      - name: Configure (Web)
+        if: matrix.config.target == 'web'
         run: >
           mkdir cmake-build
 
