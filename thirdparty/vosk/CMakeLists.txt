@@ -14,7 +14,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
 
     set_target_properties(Vosk
         PROPERTIES
-            LINK_FLAGS "--js-library ${Vosk_LIBRARY}"
+            LINK_FLAGS "--js-library ${Vosk_LIBRARY} -sDYLINK_DEBUG=1 -sPTHREADS_DEBUG=1"
     )
 else ()
     find_library(Vosk_LIBRARY
@@ -45,8 +45,14 @@ else ()
                 IMPORTED_LOCATION "${Vosk_LIBRARY}"
         )
     endif ()
-endif ()
 
+    # Copy shared libraries (emscripten statically links)
+    install(
+            DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
+            DESTINATION "${INSTALL_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
+            PATTERN ".*" EXCLUDE
+    )
+endif ()
 
 target_include_directories(Vosk
     INTERFACE
@@ -54,10 +60,3 @@ target_include_directories(Vosk
 )
 
 add_library(Vosk::Vosk ALIAS Vosk)
-
-# Copy shared libraries
-install(
-        DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
-        DESTINATION "${INSTALL_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
-        PATTERN ".*" EXCLUDE
-)
