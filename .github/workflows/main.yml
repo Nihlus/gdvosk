@@ -13,9 +13,11 @@ jobs:
       matrix:
         build_type: ['Debug', 'Release']
         config:
-          - { name: '🍏 macOS Clang', os: macos-latest }
-          - { name: '🐧 Linux GCC', os: ubuntu-latest }
-          - { name: '🪟 Windows MSVC', os: windows-latest }
+          - { name: '🍏 macOS Clang', os: macos-latest, target: macos }
+          - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux }
+          - { name: '🪟 Windows MSVC', os: windows-latest, target: windows }
+          - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a }
+          - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a }
 
     name: 🛠 Build / ${{ matrix.config.name }} (${{ matrix.build_type }})
     runs-on: ${{ matrix.config.os }}
@@ -36,6 +38,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build
 
+      - name: Setup Android NDK (Android)
+        if: matrix.config.target == 'android'
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27
+          add-to-path: true
+          link-to-sdk: true
+
       - name: Install Dependencies (Windows)
         if: matrix.config.os == 'windows-latest'
         run: |
@@ -52,12 +63,29 @@ jobs:
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
       - name: Configure
+        if: matrix.config.target != 'android'
         run: >
           mkdir cmake-build
 
           cmake
           -B cmake-build
           -G "Ninja"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          .
+
+      - name: Configure (Android)
+        if: matrix.config.target == 'android'
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Ninja"
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake 
+          -DANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }} 
+          -DANDROID_ABI=${{ matrix.config.arch }}
+          -DANDROID_PLATFORM=33
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
