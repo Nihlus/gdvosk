@@ -1,3 +1,26 @@
+# generate import library
+if (MSVC)
+    find_file(Vosk_SHARED_LIBRARY
+        NAMES
+            vosk
+            libvosk
+        PATHS
+            ${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}
+        NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+        REQUIRED
+    )
+
+    set(Vosk_DEFINITION_FILE ${Vosk_SHARED_LIBRARY})
+    string(REPLACE .dll .def Vosk_DEFINITION_FILE ${Vosk_DEFINITION_FILE})
+
+    set(Vosk_LIB_FILE ${Vosk_SHARED_LIBRARY})
+    string(REPLACE .dll .lib Vosk_DEFINITION_FILE ${Vosk_DEFINITION_FILE})
+
+    execute_process(dumpbin /exports ${Vosk_SHARED_LIBRARY} > DEF_FILE.def)
+    execute_process(lib /def:${Vosk_DEFINITION_FILE} /out:${Vosk_LIB_FILE} /machine:${CMAKE_SYSTEM_PROCESSOR})
+endif ()
+
 find_library(Vosk_LIBRARY
     NAMES
         vosk
