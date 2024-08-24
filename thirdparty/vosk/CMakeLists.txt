@@ -15,7 +15,7 @@ if (MSVC)
     string(REPLACE .dll .def Vosk_DEFINITION_FILE ${Vosk_DEFINITION_FILE})
 
     set(Vosk_LIB_FILE ${Vosk_SHARED_LIBRARY})
-    string(REPLACE .dll .lib Vosk_DEFINITION_FILE ${Vosk_DEFINITION_FILE})
+    string(REPLACE .dll .lib Vosk_LIB_FILE ${Vosk_LIB_FILE})
 
     execute_process(dumpbin /exports ${Vosk_SHARED_LIBRARY} > DEF_FILE.def)
     execute_process(lib /def:${Vosk_DEFINITION_FILE} /out:${Vosk_LIB_FILE} /machine:${CMAKE_SYSTEM_PROCESSOR})
