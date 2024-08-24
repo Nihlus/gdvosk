@@ -2,8 +2,8 @@
 if (MSVC)
     find_file(Vosk_SHARED_LIBRARY
         NAMES
-            vosk
-            libvosk
+            vosk.dll
+            libvosk.dll
         PATHS
             ${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}
         NO_DEFAULT_PATH
