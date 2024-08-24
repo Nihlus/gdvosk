@@ -59,7 +59,7 @@ add_library(Vosk::Vosk ALIAS Vosk)
 
 # Copy shared libraries
 install(
-        DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/"
-        DESTINATION "${INSTALL_DIR}/lib/"
+        DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
+        DESTINATION "${INSTALL_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
         PATTERN ".*" EXCLUDE
 )
