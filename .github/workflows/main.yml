@@ -13,9 +13,9 @@ jobs:
       matrix:
         build_type: ['Debug', 'Release']
         config:
-          - { name: '🍏 macOS Clang', os: macos-latest, target: macos }
-          - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux }
-          - { name: '🪟 Windows MSVC', os: windows-latest, target: windows }
+          - { name: '🍏 macOS Clang', os: macos-latest, target: macos, arch: universal }
+          - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux, arch: x86_64 }
+          - { name: '🪟 Windows MSVC', os: windows-latest, target: windows, arch: x86_64 }
           - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a }
           - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a }
 
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -87,7 +87,7 @@ jobs:
           -DANDROID_ABI=${{ matrix.config.arch }}
           -DANDROID_PLATFORM=33
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-${{ matrix.build_type }}
           .
 
       - name: Build
@@ -96,18 +96,24 @@ jobs:
       - name: Install
         run: cmake --install cmake-build
 
-      - name: Upload artifact (Debug)
-        if: matrix.build_type == 'Debug'
-        uses: actions/upload-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-Debug
+          name: ${{ matrix.config.target }}-${{ matrix.config.arch }}-${{ github.event.repository.name }}-${{ matrix.build_type }}
           path: |
             ${{ github.workspace }}/install-${{ matrix.build_type }}/*
 
-      - name: Upload artifact (Release)
-        if: matrix.build_type == 'Release'
-        uses: actions/upload-artifact@v3
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload merged artifact (Debug)
+        uses: actions/upload-artifact/merge@v4
         with:
-          name: ${{ github.event.repository.name }}-Release
-          path: |
-            ${{ github.workspace }}/install-${{ matrix.build_type }}/*
+          name: ${{ github.event.repository.name }}-debug
+          pattern: '*-${{ github.event.repository.name }}-Debug'
+
+      - name: Upload merged artifact (Release)
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: ${{ github.event.repository.name }}-release
+          pattern: '*-${{ github.event.repository.name }}-Release'
