@@ -14,6 +14,10 @@ if (APPLE)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
 endif ()
 
+if (NOT DEFINED CMAKE_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
+endif ()
+
 # Main project information
 project(gdvosk
     LANGUAGES CXX
@@ -72,12 +76,8 @@ include(GitVersionInfo)
 
 add_subdirectory(src)
 
-# set a default value for CMAKE_INSTALL_PREFIX
-if (NOT CMAKE_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
-endif ()
-
 set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/")
+message(STATUS ${INSTALL_DIR})
 
 install(
     TARGETS ${PROJECT_NAME}

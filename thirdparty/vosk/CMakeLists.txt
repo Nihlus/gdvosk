@@ -1,5 +1,3 @@
-set(CMAKE_FIND_DEBUG_MODE ON)
-
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     find_file(Vosk_LIBRARY
         NAMES
