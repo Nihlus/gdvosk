@@ -19,7 +19,6 @@ using namespace gdvosk;
 void SpeechRecognizer::_bind_methods()
 {
     REGISTER_GODOT_PROPERTY(Variant::STRING, recording_bus_name)
-    REGISTER_GODOT_PROPERTY(Variant::INT, capture_effect_index)
     REGISTER_GODOT_PROPERTY_WITH_HINT(Variant::OBJECT, vosk_model, PROPERTY_HINT_RESOURCE_TYPE, "VoskModel")
     REGISTER_GODOT_PROPERTY(Variant::FLOAT, silence_timeout)
 
@@ -83,21 +82,6 @@ StringName SpeechRecognizer::get_recording_bus_name() const
     return _recording_bus_name;
 }
 
-void SpeechRecognizer::set_capture_effect_index(int recording_effect_index)
-{
-    _capture_effect_index = recording_effect_index;
-
-    if (is_node_ready())
-    {
-        update_bus_data();
-    }
-}
-
-int SpeechRecognizer::get_capture_effect_index() const
-{
-    return _capture_effect_index;
-}
-
 void SpeechRecognizer::set_silence_timeout(float silence_timeout)
 {
     _silence_timeout = round<nanoseconds>(duration<float>(silence_timeout));
@@ -148,18 +132,22 @@ void SpeechRecognizer::update_bus_data()
         return;
     }
 
-    auto effect = audio_server->get_bus_effect(_recording_bus_index, _capture_effect_index);
-
-    auto capture_effect = cast_to<AudioEffectCapture>(effect.ptr());
-    if (capture_effect != nullptr)
+    // find effect
+    for (auto i = 0; i < audio_server->get_bus_effect_count(_recording_bus_index); ++i)
     {
-        {
-            semaphore_lock lock(_bus_semaphore);
-            _effect = effect;
-        }
+        auto effect = audio_server->get_bus_effect(_recording_bus_index, i);
 
-        update_configuration_warnings();
-        return;
+        auto capture_effect = cast_to<AudioEffectCapture>(effect.ptr());
+        if (capture_effect != nullptr)
+        {
+            {
+                semaphore_lock lock(_bus_semaphore);
+                _effect = effect;
+            }
+
+            update_configuration_warnings();
+            return;
+        }
     }
 
     {

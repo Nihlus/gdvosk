@@ -65,11 +65,6 @@ namespace gdvosk
         GODOT_PROPERTY(godot::StringName, recording_bus_name, "")
 
         /**
-         * Gets or sets the index of the capture effect.
-         */
-        GODOT_PROPERTY(int, capture_effect_index, 0)
-
-        /**
          * Gets or sets the Vosk language model to use.
          */
         GODOT_PROPERTY(godot::Ref<gdvosk::VoskModel>, vosk_model, nullptr)
