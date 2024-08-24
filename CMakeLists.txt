@@ -14,15 +14,15 @@ if (APPLE)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
 endif ()
 
-if (NOT DEFINED CMAKE_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
-endif ()
-
 # Main project information
 project(gdvosk
     LANGUAGES CXX
     VERSION 1.0.0
 )
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
+endif()
 
 include(godot-helpers)
 include(ccache)
