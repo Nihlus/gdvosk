@@ -23,6 +23,14 @@ project(gdvosk
 include(godot-helpers)
 include(ccache)
 
+# emscripten needs some massaging
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+    set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-s SIDE_MODULE=1")
+    set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-s SIDE_MODULE=1")
+endif ()
+
 # Create our library
 add_library(${PROJECT_NAME} SHARED)
 
