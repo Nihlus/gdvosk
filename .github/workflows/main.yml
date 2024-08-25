@@ -33,6 +33,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup MSYS2 (Windows)
+        if: matrix.config.os == 'windows-latest'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          path-type: inherit
+          install: >-
+            autotools
+            automake
+            libtool
+
       - name: Install Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
         run: brew install ccache ninja autoconf automake libtool
@@ -66,17 +77,6 @@ jobs:
       - name: Setup MSVC (Windows)
         if: matrix.config.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Setup MSYS2 (Windows)
-        if: matrix.config.os == 'windows-latest'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          path-type: inherit
-          install: >-
-            autotools
-            automake
-            libtool
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
