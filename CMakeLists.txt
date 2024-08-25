@@ -8,7 +8,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
 
 # Turn on link time optimization for everything
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+if (IPO_SUPPORTED)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+endif ()
 
 # Default to hidden all the time
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -26,8 +30,20 @@ project(gdvosk
     VERSION 1.0.0
 )
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
+endif()
+
 include(godot-helpers)
 include(ccache)
+
+# emscripten needs some massaging
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+    set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-s SIDE_MODULE=1")
+    set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-s SIDE_MODULE=1")
+endif ()
 
 # Create our library
 add_library(${PROJECT_NAME} SHARED)
@@ -70,12 +86,8 @@ include(GitVersionInfo)
 
 add_subdirectory(src)
 
-# Install library, extension file, and support files in ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
-if (NOT "${CMAKE_INSTALL_PREFIX}")
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
-endif ()
-
 set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/")
+message(STATUS ${INSTALL_DIR})
 
 message(STATUS "Installing to: ${INSTALL_DIR}")
 

@@ -44,3 +44,8 @@ VoskSpkModel* VoskSpeakerModel::get_ptr() const
 {
     return _model;
 }
+
+void VoskSpeakerModel::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("load"), &VoskSpeakerModel::load);
+}

@@ -3,7 +3,7 @@ entry_symbol = "gdvosk_library_init"
 compatibility_minimum = 4.3
 
 [icons]
-Example = "icons/Example.svg"
+SpeechRecognizer = "icons/SpeechRecognizer.svg"
 
 [libraries]
 android.debug.arm32 = "lib/android/arm32/libgdvosk-d.so"
@@ -25,6 +25,9 @@ windows.debug.x86_32 = "lib/windows/x86_32/libgdvosk-d.dll"
 windows.release.x86_32 = "lib/windows/x86_32/libgdvosk.dll"
 windows.debug.x86_64 = "lib/windows/x86_64/libgdvosk-d.dll"
 windows.release.x86_64 = "lib/windows/x86_64/libgdvosk.dll"
+
+web.debug.wasm32 = "lib/web/wasm32/libgdvosk-d.so"
+web.release.wasm32 = "lib/web/wasm32/libgdvosk.so"
 
 [dependencies]
 android.debug = {

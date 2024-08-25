@@ -10,9 +10,28 @@ find_library(Vosk_LIBRARY
 )
 
 add_library(Vosk SHARED IMPORTED GLOBAL)
-set_target_properties(Vosk
-    PROPERTIES
-        IMPORTED_LOCATION "${Vosk_LIBRARY}"
+
+if (MSVC)
+    set(Vosk_LIB ${Vosk_LIBRARY})
+    string(REPLACE .lib .dll Vosk_LIB ${Vosk_LIB})
+
+    set_target_properties(Vosk
+        PROPERTIES
+            IMPORTED_IMPLIB "${Vosk_LIBRARY}"
+            IMPORTED_LOCATION "${Vosk_LIB}"
+    )
+else ()
+    set_target_properties(Vosk
+        PROPERTIES
+            IMPORTED_LOCATION "${Vosk_LIBRARY}"
+    )
+endif ()
+
+# Copy shared libraries
+install(
+    DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
+    DESTINATION "${INSTALL_DIR}/lib/${GODOT_SYSTEM_NAME}/${GODOT_ARCH}/"
+    PATTERN ".*" EXCLUDE
 )
 
 target_include_directories(Vosk
@@ -21,10 +40,3 @@ target_include_directories(Vosk
 )
 
 add_library(Vosk::Vosk ALIAS Vosk)
-
-# Copy shared libraries
-install(
-        DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/"
-        DESTINATION "${INSTALL_DIR}/lib/"
-        PATTERN ".*" EXCLUDE
-)

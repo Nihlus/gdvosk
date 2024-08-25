@@ -49,3 +49,9 @@ Error gdvosk::VoskModel::load(const String& path)
 {
     return _model;
 }
+
+void gdvosk::VoskModel::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("find_word", "word"), &VoskModel::find_word);
+    ClassDB::bind_method(D_METHOD("load", "path"), &VoskModel::load);
+}

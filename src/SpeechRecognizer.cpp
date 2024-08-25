@@ -1,61 +1,28 @@
-//
-// Created by jarl on 2024-08-16.
-//
+// Copyright (C) 2024 Jarl Gullberg
+// SPDX-License-Identifier: MIT
+
 
 #include "SpeechRecognizer.h"
+#include "helpers/semaphore_lock.h"
+#include "vosk/VoskRecognizer.h"
 
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
-#include <chrono>
+#include <godot_cpp/variant/utility_functions.hpp>
 
-using namespace std::chrono;
 using namespace godot;
+using namespace gdvosk;
 
 void SpeechRecognizer::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("get_recording_bus_name"), &SpeechRecognizer::get_recording_bus_name);
-    ClassDB::bind_method(D_METHOD("set_recording_bus_name"), &SpeechRecognizer::set_recording_bus_name);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::STRING, "recording_bus_name", PROPERTY_HINT_NONE),
-        "set_recording_bus_name",
-        "get_recording_bus_name"
-    );
+    REGISTER_GODOT_PROPERTY(Variant::STRING, recording_bus_name)
+    REGISTER_GODOT_PROPERTY_WITH_HINT(Variant::OBJECT, vosk_model, PROPERTY_HINT_RESOURCE_TYPE, "VoskModel")
+    REGISTER_GODOT_PROPERTY(Variant::FLOAT, silence_timeout)
 
-    ClassDB::bind_method(D_METHOD("get_recording_effect_index"), &SpeechRecognizer::get_recording_effect_index);
-    ClassDB::bind_method(D_METHOD("set_recording_effect_index"), &SpeechRecognizer::set_recording_effect_index);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::INT, "recording_effect_index", PROPERTY_HINT_NONE),
-        "set_recording_effect_index",
-        "get_recording_effect_index"
-    );
-
-    ClassDB::bind_method(D_METHOD("get_vosk_model_path"), &SpeechRecognizer::get_vosk_model_path);
-    ClassDB::bind_method(D_METHOD("set_vosk_model_path"), &SpeechRecognizer::set_vosk_model_path);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::STRING, "vosk_model_path", PROPERTY_HINT_DIR),
-        "set_vosk_model_path",
-        "get_vosk_model_path"
-    );
-
-    ClassDB::bind_method(D_METHOD("get_silence_timeout"), &SpeechRecognizer::get_silence_timeout);
-    ClassDB::bind_method(D_METHOD("set_silence_timeout"), &SpeechRecognizer::set_silence_timeout);
-    ADD_PROPERTY
-    (
-        PropertyInfo(Variant::FLOAT, "silence_timeout", PROPERTY_HINT_NONE),
-        "set_silence_timeout",
-        "get_silence_timeout"
-    );
-
-    ADD_SIGNAL(MethodInfo("partial_result", PropertyInfo(Variant::STRING, "json")));
-    ADD_SIGNAL(MethodInfo("final_result", PropertyInfo(Variant::STRING, "json")));
-
-    // callables
-    ClassDB::bind_method(D_METHOD("worker_main"), &SpeechRecognizer::worker_main);
-    ClassDB::bind_method(D_METHOD("update_bus_data"), &SpeechRecognizer::update_bus_data);
+    ADD_SIGNAL(MethodInfo("partial_result", PropertyInfo(Variant::DICTIONARY, "data")));
+    ADD_SIGNAL(MethodInfo("result", PropertyInfo(Variant::DICTIONARY, "data")));
+    ADD_SIGNAL(MethodInfo("final_result", PropertyInfo(Variant::DICTIONARY, "data")));
 }
 
 void SpeechRecognizer::_exit_tree()
@@ -70,9 +37,9 @@ PackedStringArray SpeechRecognizer::_get_configuration_warnings() const
     {
         warnings.append("No valid audio bus has been configured");
     }
-    else if (_recording_effect == nullptr)
+    else if (_effect == nullptr)
     {
-        warnings.append("No valid recording effect has been detected on the configured bus");
+        warnings.append("No valid capture effect has been detected on the configured bus");
     }
     else if (_vosk_model == nullptr)
     {
@@ -108,46 +75,32 @@ void SpeechRecognizer::set_recording_bus_name(const StringName& recording_bus_na
     }
 }
 
-const StringName& SpeechRecognizer::get_recording_bus_name() const
+StringName SpeechRecognizer::get_recording_bus_name() const
 {
     return _recording_bus_name;
 }
 
-void SpeechRecognizer::set_recording_effect_index(int recording_effect_index)
-{
-    _recording_effect_index = recording_effect_index;
-
-    if (is_node_ready())
-    {
-        update_bus_data();
-    }
-}
-
-int SpeechRecognizer::get_recording_effect_index() const
-{
-    return _recording_effect_index;
-}
-
-void SpeechRecognizer::set_vosk_model_path(const String& vosk_model_path)
-{
-    _vosk_model_path = vosk_model_path;
-
-    update_vosk_data();
-}
-
-const godot::String& SpeechRecognizer::get_vosk_model_path() const
-{
-    return _vosk_model_path;
-}
-
 void SpeechRecognizer::set_silence_timeout(float silence_timeout)
 {
-    _silence_timeout = round<nanoseconds>(duration<float>(silence_timeout));;
+    _silence_timeout = static_cast<uint32_t>(std::round(silence_timeout * 1000000.0f));
 }
 
 float SpeechRecognizer::get_silence_timeout() const
 {
-    return duration_cast<duration<float>>(_silence_timeout.load()).count();
+    return static_cast<float>(_silence_timeout) / 1000000.0f;
+}
+
+void SpeechRecognizer::set_vosk_model(const godot::Ref<gdvosk::VoskModel>& vosk_model)
+{
+    semaphore_lock lock(_model_semaphore);
+
+    _vosk_model = vosk_model;
+    update_vosk_data();
+}
+
+godot::Ref<gdvosk::VoskModel> SpeechRecognizer::get_vosk_model() const
+{
+    return _vosk_model;
 }
 
 void SpeechRecognizer::update_bus_data()
@@ -157,7 +110,10 @@ void SpeechRecognizer::update_bus_data()
     _recording_bus_index = audio_server->get_bus_index(_recording_bus_name);
     if (_recording_bus_index < 0)
     {
-        _recording_effect.unref();
+        {
+            semaphore_lock lock(_bus_semaphore);
+            _effect.unref();
+        }
 
         update_configuration_warnings();
         return;
@@ -165,33 +121,44 @@ void SpeechRecognizer::update_bus_data()
 
     if (audio_server->get_bus_effect_count(_recording_bus_index) < 1)
     {
-        _recording_effect.unref();
+        {
+            semaphore_lock lock(_bus_semaphore);
+            _effect.unref();
+        }
 
         update_configuration_warnings();
         return;
     }
 
-    auto effect = audio_server->get_bus_effect(_recording_bus_index, _recording_effect_index);
-    auto recording_effect = cast_to<AudioEffectRecord>(effect.ptr());
-
-    if (recording_effect == nullptr)
+    // find effect
+    for (auto i = 0; i < audio_server->get_bus_effect_count(_recording_bus_index); ++i)
     {
-        _recording_effect.unref();
+        auto effect = audio_server->get_bus_effect(_recording_bus_index, i);
 
-        update_configuration_warnings();
-        return;
+        auto capture_effect = cast_to<AudioEffectCapture>(effect.ptr());
+        if (capture_effect != nullptr)
+        {
+            {
+                semaphore_lock lock(_bus_semaphore);
+                _effect = effect;
+            }
+
+            update_configuration_warnings();
+            return;
+        }
     }
 
-    _recording_effect.reference_ptr(recording_effect);
+    {
+        semaphore_lock lock(_bus_semaphore);
+        _effect.unref();
+    }
+
     update_configuration_warnings();
 }
 
 void SpeechRecognizer::update_vosk_data()
 {
     stop_voice_recognition();
-
-    auto globalized_path = ProjectSettings::get_singleton()->globalize_path(_vosk_model_path);
-    _vosk_model = std::shared_ptr<VoskModel>(vosk_model_new(globalized_path.ascii()), &vosk_model_free);
 
     if (_vosk_model != nullptr)
     {
@@ -227,56 +194,83 @@ void SpeechRecognizer::start_voice_recognition()
 
 void SpeechRecognizer::worker_main()
 {
-    constexpr auto interval_usec = duration_cast<microseconds>(milliseconds(200));
+    constexpr auto interval_usec = 100000;
 
-    std::optional<String> partial_result;
-    std::optional<steady_clock::time_point> no_change_time_start;
+    auto mix_rate = ProjectSettings::get_singleton()->get_setting("audio/driver/mix_rate", 44100);
 
-    auto model = _vosk_model;
+    std::optional<Dictionary> partial_result;
+    std::optional<uint64_t> no_change_time_start;
+
+    bool has_set_up = false;
+    Ref<gdvosk::VoskRecognizer> recognizer;
+    recognizer.instantiate();
+
     while (_should_worker_run)
     {
-        OS::get_singleton()->delay_usec(interval_usec.count());
+        OS::get_singleton()->delay_usec(interval_usec);
 
-        // TODO: is direct access of the recording effect thread safe?
-        if (_recording_effect == nullptr || !_recording_effect->is_recording_active())
+        //
+        PackedVector2Array data;
         {
-            continue;
-        }
-
-        auto recording = _recording_effect->get_recording();
-        if (!recording.is_valid())
-        {
-            continue;
-        }
-
-        auto recognizer = std::shared_ptr<VoskRecognizer>
-        (
-            vosk_recognizer_new(model.get(), static_cast<float>(recording->get_mix_rate())),
-            vosk_recognizer_free
-        );
-
-        auto data = recording->is_stereo()
-            ? mix_stereo_to_mono(recording->get_data())
-            : recording -> get_data();
-
-        auto* ptr = reinterpret_cast<const char*>(data.ptr());
-        if (vosk_recognizer_accept_waveform(recognizer.get(), ptr, static_cast<int>(data.size())) == 0)
-        {
-            auto new_partial_result = String(vosk_recognizer_partial_result(recognizer.get()));
-            if (!partial_result.has_value() || partial_result != new_partial_result)
+            semaphore_lock lock(_bus_semaphore);
+            if (_effect == nullptr)
             {
-                partial_result = new_partial_result;
-                no_change_time_start = steady_clock::now();
+                continue;
+            }
 
-                call_deferred("emit_signal", "partial_result", *partial_result);
+            auto samples = _effect->get_buffer(_effect->get_frames_available());
+            data = samples;
+        }
+
+        if (!has_set_up)
+        {
+            Error setup;
+            {
+                semaphore_lock lock(_model_semaphore);
+                setup = recognizer->setup(_vosk_model, static_cast<float>(mix_rate));
+            }
+
+            if (setup != OK)
+            {
+                continue;
+            }
+
+            has_set_up = true;
+        }
+
+        auto accept_waveform = recognizer->accept_samples(data);
+
+        switch (accept_waveform)
+        {
+            case ERR_BUSY:
+            {
+                auto new_partial_result = recognizer->get_partial_result();
+                if (!partial_result.has_value() || partial_result != new_partial_result)
+                {
+                    partial_result = new_partial_result;
+                    no_change_time_start = Time::get_singleton()->get_ticks_usec();
+
+                    call_deferred("emit_signal", "partial_result", *partial_result);
+                }
+
+                break;
+            }
+            case OK:
+            {
+                call_deferred("emit_signal", "result", recognizer->get_result());
+                break;
+            }
+            case FAILED:
+            default:
+            {
+                continue;
             }
         }
 
-        auto now = steady_clock::now();
+        auto now = Time::get_singleton()->get_ticks_usec();
         if (no_change_time_start.has_value() && (now - *no_change_time_start > _silence_timeout.load()))
         {
-            auto final_result = String(vosk_recognizer_final_result(recognizer.get()));
-            call_deferred("emit_signal", "final_result", final_result);
+            call_deferred("emit_signal", "final_result", recognizer->get_final_result());
 
             partial_result = std::nullopt;
             no_change_time_start = std::nullopt;
@@ -284,32 +278,11 @@ void SpeechRecognizer::worker_main()
     }
 }
 
-PackedByteArray SpeechRecognizer::mix_stereo_to_mono(const PackedByteArray& data)
+SpeechRecognizer::SpeechRecognizer()
 {
-    if (data.size() % 4 != 0)
-    {
-        PackedByteArray silent;
-        silent.resize(24);
+    _model_semaphore.instantiate();
+    _model_semaphore->post();
 
-        return silent;
-    }
-
-    PackedByteArray output;
-    output.resize(data.size() / 2);
-
-    auto output_index = 0;
-    for (auto i = 0; i < data.size(); i += 4)
-    {
-        const auto left_channel = static_cast<int16_t>(data[i]);
-        const auto right_channel = static_cast<int16_t>(data[i + 2]);
-
-        const auto mixed = static_cast<int16_t>((left_channel + right_channel) / 2);
-
-        output[output_index] = static_cast<uint8_t>(mixed & 0xFF00);
-        output[output_index + 1] = static_cast<uint8_t>((mixed & 0x00FF) << 8);
-
-        output_index += 2;
-    }
-
-    return output;
+    _bus_semaphore.instantiate();
+    _bus_semaphore->post();
 }
