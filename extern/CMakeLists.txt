@@ -43,8 +43,9 @@ FetchContent_Declare(
 if (NOT APPLE)
     # OpenBLAS
     if (MSVC)
-        # not enabled by default on MSV with OpenBLAS
+        # not enabled by default on MSVC with OpenBLAS
         enable_language(ASM)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "")
     endif ()
 
     set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
