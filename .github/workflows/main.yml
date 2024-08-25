@@ -85,7 +85,7 @@ jobs:
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
       - name: Configure
-        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web') && matrix.config.target != "macos" }}
+        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web' && matrix.config.target != 'macos') }}
         run: >
           mkdir cmake-build
 
