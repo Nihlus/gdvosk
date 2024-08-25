@@ -62,6 +62,10 @@ if (NOT APPLE)
     set(USE_LOCKING 1 CACHE INTERNAL "")
     set(USE_THREAD 0 CACHE INTERNAL "")
 
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+        set(ARCH generic CACHE INTERNAL "")
+    endif ()
+
     FetchContent_Declare(
         OpenBLAS
         GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
