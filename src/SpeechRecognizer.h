@@ -15,7 +15,7 @@
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/thread.hpp>
 
-#include <vosk/vosk_api.h>
+#include <vosk_api.h>
 #include <godot_cpp/classes/semaphore.hpp>
 #include "vosk/VoskModel.h"
 #include "helpers/auto_property.h"

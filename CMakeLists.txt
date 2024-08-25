@@ -7,6 +7,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
 
+# Always build position independent code
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Turn on link time optimization for everything
 include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_SUPPORTED)
@@ -31,7 +34,9 @@ project(gdvosk
 )
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
+    set(GDVOSK_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
+else ()
+    set(GDVOSK_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 endif()
 
 include(godot-helpers)
@@ -86,8 +91,7 @@ include(GitVersionInfo)
 
 add_subdirectory(src)
 
-set(INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/")
-message(STATUS ${INSTALL_DIR})
+set(INSTALL_DIR "${GDVOSK_INSTALL_PREFIX}/${PROJECT_NAME}/")
 
 message(STATUS "Installing to: ${INSTALL_DIR}")
 
@@ -121,41 +125,10 @@ set(GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE)
 
 option(BUILD_SHARED_LIBS "Build and link with libraries." OFF)
 
-add_subdirectory(extern/godot-cpp)
-set_target_properties(godot-cpp
-    PROPERTIES
-        CXX_VISIBILITY_PRESET hidden
-)
-
-# policies for kaldi
-cmake_policy(PUSH)
-    set(CMAKE_POLICY_DEFAULT_CMP0146 OLD)
-    set(CMAKE_POLICY_DEFAULT_CMP0148 OLD)
-    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
-    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-
-    set(KALDI_BUILD_EXE OFF)
-    set(KALDI_BUILD_TEST OFF)
-
-
-    add_subdirectory(extern/kaldi)
-    add_custom_target(kaldi-tools
-        COMMAND make -j openfst cub
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/extern/kaldi/tools
-    )
-    add_dependencies(kaldi-base kaldi-tools)
-cmake_policy(POP)
-
-set(kaldi_ROOT "${CMAKE_CURRENT_BINARY_DIR}/extern/kaldi")
-
-cmake_policy(PUSH)
-    add_subdirectory(extern/vosk-api)
-cmake_policy(POP)
-
-add_subdirectory(thirdparty/vosk)
+add_subdirectory(extern EXCLUDE_FROM_ALL)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         godot-cpp
-        Vosk::Vosk
+        vosk
 )

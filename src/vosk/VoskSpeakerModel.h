@@ -6,7 +6,7 @@
 #define VOSKSPEAKERMODEL_H
 
 #include <godot_cpp/classes/resource.hpp>
-#include <vosk/vosk_api.h>
+#include <vosk_api.h>
 
 namespace gdvosk
 {

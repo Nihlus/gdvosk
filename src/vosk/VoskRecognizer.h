@@ -8,7 +8,7 @@
 
 #include "../helpers/auto_property.h"
 #include <godot_cpp/classes/ref_counted.hpp>
-#include <vosk/vosk_api.h>
+#include <vosk_api.h>
 #include <godot_cpp/classes/audio_stream_wav.hpp>
 
 #include "VoskSpeakerModel.h"
