@@ -85,13 +85,26 @@ jobs:
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
       - name: Configure
-        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web') }}
+        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web') && matrix.config.target != "macos" }}
         run: >
           mkdir cmake-build
 
           cmake
           -B cmake-build
           -G "Ninja"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          .
+
+      - name: Configure (OSX)
+        if: matrix.config.target == 'macos'
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Ninja"
+          -DCMAKE_OSX_ARCHITECTURES=x86_64;arm64
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
