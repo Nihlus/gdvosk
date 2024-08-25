@@ -175,4 +175,4 @@ target_link_directories(fstngram
 )
 
 add_dependencies(kaldi-base openfst)
-add_dependencies
+
