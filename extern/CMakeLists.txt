@@ -50,6 +50,8 @@ if (NOT APPLE)
     if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
         set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
         set(TARGET NEHALEM CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
+        set(TARGET GENERIC CACHE INTERNAL "")
     endif ()
 
     set(USE_LOCKING 1 CACHE INTERNAL "")
@@ -123,10 +125,16 @@ ExternalProject_Add(
         BINARY_DIR ${openfst_BINARY_DIR}
         CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure CFLAGS='-g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-shared --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin"
         BUILD_COMMAND bash -c "make -j && make install"
+        BUILD_BYPRODUCTS
+            ${openfst_BINARY_DIR}/lib/libfst.a
+            ${openfst_BINARY_DIR}/lib/libfstngram.a
 )
 
 add_library(fst STATIC IMPORTED GLOBAL)
 add_library(fstngram STATIC IMPORTED GLOBAL)
+
+add_dependencies(fst openfst)
+add_dependencies(fstngram openfst)
 
 set_target_properties(fst
     PROPERTIES
@@ -162,3 +170,4 @@ target_link_directories(fstngram
 )
 
 add_dependencies(kaldi-base openfst)
+add_dependencies
