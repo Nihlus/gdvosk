@@ -27,6 +27,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 set(KALDI_BUILD_EXE OFF CACHE INTERNAL "")
 set(KALDI_BUILD_TEST OFF CACHE INTERNAL "")
 
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    add_compile_options(kaldi-base
+        -msimd128
+    )
+endif ()
+
 FetchContent_Declare(
     kaldi
     GIT_REPOSITORY https://github.com/alphacep/kaldi
@@ -34,28 +40,34 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE
 )
 
-# OpenBLAS
-set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
-set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
+if (NOT APPLE)
+    # OpenBLAS
+    set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
+    set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
-set(ONLY_CBLAS 1 CACHE INTERNAL "")
-set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
-set(TARGET NEHALEM CACHE INTERNAL "")
-set(USE_LOCKING 1 CACHE INTERNAL "")
-set(USE_THREAD 0 CACHE INTERNAL "")
+    set(ONLY_CBLAS 1 CACHE INTERNAL "")
 
-FetchContent_Declare(
-    OpenBLAS
-    GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
-    GIT_TAG v0.3.20
-)
+    if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
+        set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
+        set(TARGET NEHALEM CACHE INTERNAL "")
+    endif ()
 
-# CLAPACK
-FetchContent_Declare(
-    clapack
-    GIT_REPOSITORY https://github.com/alphacep/clapack
-    GIT_TAG eb94c6c9e91808f48e346161c09ee9ce7770c065
-)
+    set(USE_LOCKING 1 CACHE INTERNAL "")
+    set(USE_THREAD 0 CACHE INTERNAL "")
+
+    FetchContent_Declare(
+        OpenBLAS
+        GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
+        GIT_TAG v0.3.20
+    )
+
+    # CLAPACK
+    FetchContent_Declare(
+        clapack
+        GIT_REPOSITORY https://github.com/alphacep/clapack
+        GIT_TAG eb94c6c9e91808f48e346161c09ee9ce7770c065
+    )
+endif ()
 
 # vosk
 FetchContent_Declare(
@@ -64,19 +76,26 @@ FetchContent_Declare(
     GIT_TAG v0.3.50
 )
 
-FetchContent_MakeAvailable(OpenBLAS clapack openfst)
+FetchContent_MakeAvailable(openfst)
+
+if (NOT APPLE)
+    FetchContent_MakeAvailable(OpenBLAS clapack)
+endif ()
 
 # Kaldi screws with the install prefix, so we'll have to work around this
 set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 FetchContent_MakeAvailable(kaldi)
-target_link_libraries(kaldi-base
-    PRIVATE
-        $<BUILD_INTERFACE:openblas>
-        $<BUILD_INTERFACE:blas>
-        $<BUILD_INTERFACE:f2c>
-        $<BUILD_INTERFACE:lapack>
-)
+
+if (NOT APPLE)
+    target_link_libraries(kaldi-base
+        PRIVATE
+            $<BUILD_INTERFACE:openblas>
+            $<BUILD_INTERFACE:blas>
+            $<BUILD_INTERFACE:f2c>
+            $<BUILD_INTERFACE:lapack>
+    )
+endif ()
 
 unset(CMAKE_INSTALL_PREFIX)
 unset(CMAKE_INSTALL_PREFIX CACHE)
