@@ -57,15 +57,11 @@ if (NOT APPLE)
         set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
         set(TARGET NEHALEM CACHE INTERNAL "")
     elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
-        set(TARGET GENERIC CACHE INTERNAL "")
+        set(TARGET generic CACHE INTERNAL "")
     endif ()
 
     set(USE_LOCKING 1 CACHE INTERNAL "")
     set(USE_THREAD 0 CACHE INTERNAL "")
-
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-        set(ARCH generic CACHE INTERNAL "")
-    endif ()
 
     FetchContent_Declare(
         OpenBLAS
