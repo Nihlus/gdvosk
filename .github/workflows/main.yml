@@ -31,13 +31,13 @@ jobs:
 
       - name: Install Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
-        run: brew install ccache ninja
+        run: brew install ccache ninja autoconf
 
       - name: Install Dependencies (Linux)
         if: matrix.config.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache ninja-build
+          sudo apt-get install -y ccache ninja-build autoconf
 
       - name: Install Dependencies (Web)
         if: matrix.config.target == 'web'
@@ -62,6 +62,14 @@ jobs:
       - name: Setup MSVC (Windows)
         if: matrix.config.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup MSYS2 (Windows)
+        if: matrix.config.os == 'windows-latest'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            autotools
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
