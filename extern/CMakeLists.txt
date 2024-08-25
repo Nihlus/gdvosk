@@ -28,7 +28,7 @@ set(KALDI_BUILD_EXE OFF CACHE INTERNAL "")
 set(KALDI_BUILD_TEST OFF CACHE INTERNAL "")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    add_compile_options(kaldi-base
+    add_compile_options(
         -msimd128
     )
 endif ()
