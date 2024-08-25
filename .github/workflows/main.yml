@@ -31,13 +31,13 @@ jobs:
 
       - name: Install Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
-        run: brew install ccache ninja autoconf
+        run: brew install ccache ninja autoconf automake
 
       - name: Install Dependencies (Linux)
         if: matrix.config.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache ninja-build autoconf
+          sudo apt-get install -y ccache ninja-build autoconf automake
 
       - name: Install Dependencies (Web)
         if: matrix.config.target == 'web'
