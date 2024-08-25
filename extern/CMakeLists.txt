@@ -42,6 +42,11 @@ FetchContent_Declare(
 
 if (NOT APPLE)
     # OpenBLAS
+    if (MSVC)
+        # not enabled by default on MSV with OpenBLAS
+        enable_language(ASM)
+    endif ()
+
     set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
     set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
