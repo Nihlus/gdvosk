@@ -38,7 +38,7 @@ FetchContent_Declare(
 set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
-#set(ONLY_CBLAS 1 CACHE INTERNAL "")
+set(ONLY_CBLAS 1 CACHE INTERNAL "")
 set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
 set(TARGET NEHALEM CACHE INTERNAL "")
 set(USE_LOCKING 1 CACHE INTERNAL "")
@@ -50,6 +50,13 @@ FetchContent_Declare(
     GIT_TAG v0.3.20
 )
 
+# CLAPACK
+FetchContent_Declare(
+    clapack
+    GIT_REPOSITORY https://github.com/alphacep/clapack
+    GIT_TAG eb94c6c9e91808f48e346161c09ee9ce7770c065
+)
+
 # vosk
 FetchContent_Declare(
     vosk-api
@@ -57,7 +64,7 @@ FetchContent_Declare(
     GIT_TAG v0.3.50
 )
 
-FetchContent_MakeAvailable(OpenBLAS openfst)
+FetchContent_MakeAvailable(OpenBLAS clapack openfst)
 
 # Kaldi screws with the install prefix, so we'll have to work around this
 set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
@@ -65,9 +72,10 @@ set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 FetchContent_MakeAvailable(kaldi)
 target_link_libraries(kaldi-base
     PRIVATE
-        openblas
-        $<TARGET_OBJECTS:lapack>
-        gfortran
+        $<BUILD_INTERFACE:openblas>
+        $<BUILD_INTERFACE:blas>
+        $<BUILD_INTERFACE:f2c>
+        $<BUILD_INTERFACE:lapack>
 )
 
 unset(CMAKE_INSTALL_PREFIX)
