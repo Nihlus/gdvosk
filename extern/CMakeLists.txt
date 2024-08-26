@@ -75,6 +75,12 @@ if (NOT APPLE)
         GIT_REPOSITORY https://github.com/alphacep/clapack
         GIT_TAG eb94c6c9e91808f48e346161c09ee9ce7770c065
     )
+
+    if (ANDROID)
+        add_compile_options(
+            -Wno-format-security
+        )
+    endif ()
 endif ()
 
 # vosk
