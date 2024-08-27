@@ -123,7 +123,7 @@ if (NOT APPLE)
 
         if ("${GODOT_ARCH}" STREQUAL "arm32")
             add_compile_options(
-                -mfloat-abi=softp
+                -mfloat-abi=softfp
                 -mfpu=neon
             )
         endif ()
