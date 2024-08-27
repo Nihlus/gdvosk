@@ -222,12 +222,17 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
             ${openfst_BINARY_DIR}/lib/libfstngram.a
     )
 else ()
+    set(OPENFST_EXPLICIT_COMPILER "")
+    if (NOT APPLE)
+        set (OPENFST_EXPLICIT_COMPILER "CC='${CMAKE_C_COMPILER} ${OPENFST_COMPILER_FLAGS}' CXX='${CMAKE_CXX_COMPILER} ${OPENFST_COMPILER_FLAGS}'")
+    endif ()
+
     ExternalProject_Add(
         openfst
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
             SOURCE_DIR ${openfst_SOURCE_DIR}
             BINARY_DIR ${openfst_BINARY_DIR}
-            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure CC='${CMAKE_C_COMPILER} ${OPENFST_COMPILER_FLAGS}' CXX='${CMAKE_CXX_COMPILER} ${OPENFST_COMPILER_FLAGS}' CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
+            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure ${OPENFST_EXPLICIT_COMPILER} CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
             BUILD_COMMAND bash -c "make -j && make install"
             BUILD_BYPRODUCTS
                 ${openfst_BINARY_DIR}/lib/libfst.a
