@@ -11,6 +11,39 @@ set_target_properties(godot-cpp
 )
 
 # openfst
+set(OPENFST_EXTRA_FLAGS "")
+set(OPENFST_EXTRA_CONFIGURE_FLAGS "")
+set(OPENFST_TARGET "")
+
+if (CMAKE_CROSSCOMPILING)
+    if (ANDROID)
+        if ("${GODOT_ARCH}" STREQUAL "arm64")
+            set(OPENFST_TARGET "aarch64-linux-android")
+        elseif ("${GODOT_ARCH}" STREQUAL "arm32")
+            set(OPENFST_TARGET "armv7a-linux-androideabi")
+        elseif ("${GODOT_ARCH}" STREQUAL "x86_64")
+            set(OPENFST_TARGET "x86_64-linux-android")
+        elseif ("${GODOT_ARCH}" STREQUAL "x86_32")
+            set(OPENFST_TARGET "i686-linux-android")
+        endif ()
+
+        set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} --target=${OPENFST_TARGET}${ANDROID_PLATFORM}")
+        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=${OPENFST_TARGET}")
+    elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
+        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=wasm32-unknown-wasi")
+    endif ()
+endif ()
+
+if (ANDROID)
+    add_compile_definitions(
+        FST_NO_DYNAMIC_LINKING
+    )
+endif ()
+
+if (APPLE)
+    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -arch x86_64 -arch arm64")
+endif ()
+
 FetchContent_Declare(
     openfst
     GIT_REPOSITORY https://github.com/alphacep/openfst
@@ -56,6 +89,12 @@ if (NOT APPLE)
     if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
         set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
         set(TARGET NEHALEM CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "arm32")
+        set(TARGET ARMV7 CACHE INTERNAL "")
+        set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "arm64")
+        set(TARGET ARMV8 CACHE INTERNAL "")
+        set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
     elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
         set(TARGET generic CACHE INTERNAL "")
     endif ()
@@ -73,13 +112,21 @@ if (NOT APPLE)
     FetchContent_Declare(
         clapack
         GIT_REPOSITORY https://github.com/alphacep/clapack
-        GIT_TAG eb94c6c9e91808f48e346161c09ee9ce7770c065
+        GIT_TAG c13f1973ac5282c28dad9330e46d940ec2eee291
+        UPDATE_DISCONNECTED 1
     )
 
     if (ANDROID)
         add_compile_options(
             -Wno-format-security
         )
+
+        if ("${GODOT_ARCH}" STREQUAL "arm32")
+            add_compile_options(
+                -mfloat-abi=softp
+                -mfpu=neon
+            )
+        endif ()
     endif ()
 endif ()
 
@@ -129,13 +176,20 @@ target_include_directories(vosk
         ${vosk-api_SOURCE_DIR}/src
 )
 
+if (ANDROID)
+    target_link_libraries(vosk
+        PRIVATE
+            log
+    )
+endif ()
+
 # fix up openfst linkage with kaldi
 ExternalProject_Add(
     openfst
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
         SOURCE_DIR ${openfst_SOURCE_DIR}
         BINARY_DIR ${openfst_BINARY_DIR}
-        CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure CFLAGS='-g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-shared --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin"
+        CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure CC='${CMAKE_C_COMPILER} ${OPENFST_EXTRA_FLAGS}' CXX='${CMAKE_CXX_COMPILER} ${OPENFST_EXTRA_FLAGS}' CXXFLAGS='${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
         BUILD_COMMAND bash -c "make -j && make install"
         BUILD_BYPRODUCTS
             ${openfst_BINARY_DIR}/lib/libfst.a
