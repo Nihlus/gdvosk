@@ -117,7 +117,7 @@ if (NOT APPLE)
     FetchContent_Declare(
         OpenBLAS
             GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
-            GIT_TAG v0.3.20
+            GIT_TAG v0.3.28
     )
 
     # CLAPACK
