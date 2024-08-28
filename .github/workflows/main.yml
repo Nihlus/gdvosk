@@ -38,8 +38,11 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          path-type: inherit
           install: >-
+            git
+            ninja
+            cmake
+            ccache
             autotools
             automake
             libtool
@@ -69,23 +72,26 @@ jobs:
           add-to-path: true
           link-to-sdk: true
 
-      - name: Install Dependencies (Windows)
-        if: matrix.config.os == 'windows-latest'
-        run: |
-          choco upgrade ccache ninja
-
-      - name: Setup MSVC (Windows)
-        if: matrix.config.os == 'windows-latest'
-        uses: ilammy/msvc-dev-cmd@v1
-
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           max-size: '10G'
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
-      - name: Configure
-        if: ${{ (matrix.config.target != 'android' && matrix.config.target != 'web' && matrix.config.target != 'macos') }}
+      - name: Configure (Linux)
+        if: matrix.config.target != 'linux'
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Ninja"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix $(cygpath -u ${{ github.workspace }}/install-${{ matrix.build_type }})
+          .
+
+      - name: Configure (Windows)
+        if: matrix.config.target != 'windows'
         run: >
           mkdir cmake-build
 
