@@ -87,55 +87,45 @@ endif ()
 
 if (NOT APPLE)
     # OpenBLAS
-    if (NOT "${GODOT_ARCH}" STREQUAL "wasm32")
-        if (MSVC)
-            # not enabled by default on MSVC with OpenBLAS
-            enable_language(ASM)
-            set(CMAKE_MSVC_RUNTIME_LIBRARY "")
-        endif ()
+    if (MSVC)
+        # not enabled by default on MSVC with OpenBLAS
+        enable_language(ASM)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "")
+    endif ()
 
-        set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
-        set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
+    set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
+    set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
-        set(ONLY_CBLAS 1 CACHE INTERNAL "")
+    set(ONLY_CBLAS 1 CACHE INTERNAL "")
 
-        if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
-            set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
-            set(TARGET NEHALEM CACHE INTERNAL "")
-        elseif ("${GODOT_ARCH}" STREQUAL "arm32")
-            set(TARGET ARMV7 CACHE INTERNAL "")
-            set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
-        elseif ("${GODOT_ARCH}" STREQUAL "arm64")
-            set(TARGET ARMV8 CACHE INTERNAL "")
-            set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
-        endif ()
+    if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
+        set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
+        set(TARGET NEHALEM CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "arm32")
+        set(TARGET ARMV7 CACHE INTERNAL "")
+        set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "arm64")
+        set(TARGET ARMV8 CACHE INTERNAL "")
+        set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
+    elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
+        set(TARGET RISCV64_GENERIC CACHE INTERNAL "")
+    endif ()
 
-        set(USE_LOCKING 1 CACHE INTERNAL "")
-        set(USE_THREAD 0 CACHE INTERNAL "")
+    set(USE_LOCKING 1 CACHE INTERNAL "")
+    set(USE_THREAD 0 CACHE INTERNAL "")
 
-        FetchContent_Declare(
-            OpenBLAS
+    FetchContent_Declare(
+        OpenBLAS
             GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
             GIT_TAG v0.3.20
-        )
-    endif ()
+    )
 
     # CLAPACK
-    if ("${GODOT_ARCH}" STREQUAL "wasm32")
-        FetchContent_Declare(
-            clapack
-            GIT_REPOSITORY https://gitlab.inria.fr/multispeech/kaldi.web/clapack-wasm
-            GIT_TAG a24a1c96415b1f39053be724012512d02bef904d
-            PATCH_COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/patches/clapack-wasm.patch
-            UPDATE_DISCONNECTED 1
-        )
-    else ()
-        FetchContent_Declare(
-            clapack
+    FetchContent_Declare(
+        clapack
             GIT_REPOSITORY https://github.com/alphacep/clapack
             GIT_TAG c13f1973ac5282c28dad9330e46d940ec2eee291
-        )
-    endif ()
+    )
 
     if (ANDROID)
         add_compile_options(
@@ -161,11 +151,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(openfst)
 
 if (NOT APPLE)
-    if ("${GODOT_ARCH}" STREQUAL "wasm32")
-        FetchContent_MakeAvailable(clapack)
-    else ()
-        FetchContent_MakeAvailable(OpenBLAS clapack)
-    endif ()
+    FetchContent_MakeAvailable(OpenBLAS clapack)
 endif ()
 
 # Kaldi screws with the install prefix, so we'll have to work around this
@@ -174,22 +160,13 @@ set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 FetchContent_MakeAvailable(kaldi)
 
 if (NOT APPLE)
-    if ("${GODOT_ARCH}" STREQUAL "wasm32")
-        target_link_libraries(kaldi-base
-            PRIVATE
-                $<BUILD_INTERFACE:cblas>
-                $<BUILD_INTERFACE:f2c>
-                $<BUILD_INTERFACE:lapack>
-        )
-    else ()
-        target_link_libraries(kaldi-base
-            PRIVATE
-                $<BUILD_INTERFACE:openblas>
-                $<BUILD_INTERFACE:blas>
-                $<BUILD_INTERFACE:f2c>
-                $<BUILD_INTERFACE:lapack>
-        )
-    endif ()
+    target_link_libraries(kaldi-base
+        PRIVATE
+            $<BUILD_INTERFACE:openblas>
+            $<BUILD_INTERFACE:blas>
+            $<BUILD_INTERFACE:f2c>
+            $<BUILD_INTERFACE:lapack>
+    )
 endif ()
 
 unset(CMAKE_INSTALL_PREFIX)
@@ -230,41 +207,6 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
             ${openfst_BINARY_DIR}/lib/libfst.a
             ${openfst_BINARY_DIR}/lib/libfstngram.a
     )
-
-    ExternalProject_Add(
-        clapack
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
-            SOURCE_DIR ${clapack_SOURCE_DIR}
-            BINARY_DIR ${clapack_BINARY_DIR}
-            CONFIGURE_COMMAND true
-            BUILD_COMMAND bash -c "cd ${clapack_SOURCE_DIR} && CXXFLAGS='${CMAKE_CXX_FLAGS}' emmake make -j || CXXFLAGS='${CMAKE_CXX_FLAGS}' emmake make -j" # run twice for some ungodly reason
-            INSTALL_COMMAND true
-            BUILD_BYPRODUCTS
-            ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/libcblaswr.a
-            ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/lapack.a
-            ${clapack_SOURCE_DIR}/libf2c/libf2c.a
-    )
-
-    add_library(f2c STATIC IMPORTED GLOBAL)
-    set_target_properties(f2c
-        PROPERTIES
-            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/libf2c/libf2c.a
-    )
-    add_dependencies(f2c clapack)
-
-    add_library(cblas STATIC IMPORTED GLOBAL)
-    set_target_properties(cblas
-        PROPERTIES
-            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/libcblaswr.a
-    )
-    add_dependencies(cblas clapack)
-
-    add_library(lapack STATIC IMPORTED GLOBAL)
-    set_target_properties(lapack
-        PROPERTIES
-            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/lapack.a
-    )
-    add_dependencies(lapack clapack)
 else ()
     set(OPENFST_EXPLICIT_COMPILER "")
     if (NOT APPLE)
