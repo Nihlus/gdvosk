@@ -79,19 +79,7 @@ jobs:
           key: ${{ matrix.config.os }}-${{ matrix.build_type }}
 
       - name: Configure (Linux)
-        if: matrix.config.target != 'linux'
-        run: >
-          mkdir cmake-build
-
-          cmake
-          -B cmake-build
-          -G "Ninja"
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          --install-prefix $(cygpath -u ${{ github.workspace }}/install-${{ matrix.build_type }})
-          .
-
-      - name: Configure (Windows)
-        if: matrix.config.target != 'windows'
+        if: matrix.config.target == 'linux'
         run: >
           mkdir cmake-build
 
@@ -100,6 +88,18 @@ jobs:
           -G "Ninja"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          .
+
+      - name: Configure (Windows)
+        if: matrix.config.target == 'windows'
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Ninja"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix $(cygpath -u ${{ github.workspace }}/install-${{ matrix.build_type }})
           .
 
       - name: Configure (OSX)
@@ -136,8 +136,8 @@ jobs:
           cmake
           -B cmake-build
           -G "Ninja"
-          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake 
-          -DANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }} 
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake
+          -DANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}
           -DANDROID_ABI=${{ matrix.config.arch }}
           -DANDROID_PLATFORM=33
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
