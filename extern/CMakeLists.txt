@@ -78,7 +78,7 @@ else ()
     FetchContent_Declare(
         kaldi
         GIT_REPOSITORY https://github.com/alphacep/kaldi
-        GIT_TAG 6417ac1dece94783e80dfbac0148604685d27579 # "vosk" branch where the WASM patch applies
+        GIT_TAG bc5baf14231660bd50b7d05788865b4ac6c34481 # "vosk" branch where the WASM patch applies
         PATCH_COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/patches/kaldi.patch
         UPDATE_DISCONNECTED 1
         OVERRIDE_FIND_PACKAGE
@@ -174,13 +174,22 @@ set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 FetchContent_MakeAvailable(kaldi)
 
 if (NOT APPLE)
-    target_link_libraries(kaldi-base
-        PRIVATE
-            $<BUILD_INTERFACE:openblas>
-            $<BUILD_INTERFACE:blas>
-            $<BUILD_INTERFACE:f2c>
-            $<BUILD_INTERFACE:lapack>
-    )
+    if ("${GODOT_ARCH}" STREQUAL "wasm32")
+        target_link_libraries(kaldi-base
+            PRIVATE
+                $<BUILD_INTERFACE:cblas>
+                $<BUILD_INTERFACE:f2c>
+                $<BUILD_INTERFACE:lapack>
+        )
+    else ()
+        target_link_libraries(kaldi-base
+            PRIVATE
+                $<BUILD_INTERFACE:openblas>
+                $<BUILD_INTERFACE:blas>
+                $<BUILD_INTERFACE:f2c>
+                $<BUILD_INTERFACE:lapack>
+        )
+    endif ()
 endif ()
 
 unset(CMAKE_INSTALL_PREFIX)
@@ -221,6 +230,41 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
             ${openfst_BINARY_DIR}/lib/libfst.a
             ${openfst_BINARY_DIR}/lib/libfstngram.a
     )
+
+    ExternalProject_Add(
+        clapack
+            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
+            SOURCE_DIR ${clapack_SOURCE_DIR}
+            BINARY_DIR ${clapack_BINARY_DIR}
+            CONFIGURE_COMMAND true
+            BUILD_COMMAND bash -c "cd ${clapack_SOURCE_DIR} && CXXFLAGS='${CMAKE_CXX_FLAGS}' emmake make -j || CXXFLAGS='${CMAKE_CXX_FLAGS}' emmake make -j" # run twice for some ungodly reason
+            INSTALL_COMMAND true
+            BUILD_BYPRODUCTS
+            ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/libcblaswr.a
+            ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/lapack.a
+            ${clapack_SOURCE_DIR}/libf2c/libf2c.a
+    )
+
+    add_library(f2c STATIC IMPORTED GLOBAL)
+    set_target_properties(f2c
+        PROPERTIES
+            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/libf2c/libf2c.a
+    )
+    add_dependencies(f2c clapack)
+
+    add_library(cblas STATIC IMPORTED GLOBAL)
+    set_target_properties(cblas
+        PROPERTIES
+            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/libcblaswr.a
+    )
+    add_dependencies(cblas clapack)
+
+    add_library(lapack STATIC IMPORTED GLOBAL)
+    set_target_properties(lapack
+        PROPERTIES
+            IMPORTED_LOCATION ${clapack_SOURCE_DIR}/CLAPACK-3.2.1/lapack.a
+    )
+    add_dependencies(lapack clapack)
 else ()
     set(OPENFST_EXPLICIT_COMPILER "")
     if (NOT APPLE)

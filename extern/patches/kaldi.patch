@@ -6,11 +6,12 @@ index 69aebdb26..bd66c91eb 100644
  
  # Reset the default goal, so that the all target will become default
  .DEFAULT_GOAL :=
+ .PHONY: all mklibdir rmlibdir checkversion
 -all: $(SUBDIRS) matrix/test
 +all: $(SUBDIRS) #matrix/test
- 	-echo Done
+ 	@echo Done
  
- mklibdir:
+ ifneq ($(KALDILIBDIR), )
 diff --git a/src/configure b/src/configure
 index c74d67af8..cf1f8cdd0 100755
 --- a/src/configure
