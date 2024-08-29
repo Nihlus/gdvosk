@@ -14,7 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_SUPPORTED)
 if (IPO_SUPPORTED)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 endif ()
 
 # Default to hidden all the time
