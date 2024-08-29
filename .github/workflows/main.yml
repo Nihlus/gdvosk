@@ -15,7 +15,7 @@ jobs:
         config:
           - { name: '🍏 macOS Clang', os: macos-latest, target: macos, arch: universal, shell: bash }
           - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux, arch: x86_64, shell: bash }
-          - { name: '🪟 Windows MSVC', os: windows-latest, target: windows, arch: x86_64, shell: 'msys2 {0}' }
+          - { name: '🪟 Windows MinGW-w64', os: ubuntu-latest, target: windows, arch: x86_64, shell: 'msys2 {0}' }
           - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a, shell: bash }
           - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a, shell: bash }
           - { name: '🌐 Web WASM32', os: ubuntu-latest, target: web, arch: wasm32, shell: bash }
@@ -33,21 +33,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup MSYS2 (Windows)
-        if: matrix.config.os == 'windows-latest'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            git
-            ninja
-            cmake
-            ccache
-            autotools
-            automake
-            libtool
-            mingw-w64-x86_64-gcc
-
       - name: Install Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
         run: brew install ccache ninja autoconf automake libtool
@@ -57,6 +42,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build autoconf automake
+
+      - name: Install Dependencies (Windows)
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
 
       - name: Install Dependencies (Web)
         if: matrix.config.target == 'web'
@@ -91,12 +82,6 @@ jobs:
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
 
-      - name: Normalize install path (Windows)
-        if: matrix.config.target == 'windows'
-        run: >
-          echo "INSTALL_PATH=$(cygpath -u '${{ github.workspace }}')/install-${{ matrix.build_type }}" >> $GITHUB_OUTPUT
-        id: install_path
-
       - name: Configure (Windows)
         if: matrix.config.target == 'windows'
         run: >
@@ -105,8 +90,9 @@ jobs:
           cmake
           -B cmake-build
           -G "Ninja"
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/mingw-w64-x86_64.cmake
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          --install-prefix ${{ steps.install_path.outputs.INSTALL_PATH }}
+          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
 
       - name: Configure (OSX)
