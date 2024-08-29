@@ -96,7 +96,6 @@ if (NOT APPLE)
     set(CMAKE_POLICY_DEFAULT_CMP0054 OLD)
     set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
-    set(ONLY_CBLAS 1 CACHE INTERNAL "")
     set(BUILD_TESTING OFF CACHE INTERNAL "")
     set(C_LAPACK ON CACHE INTERNAL "")
 
@@ -155,6 +154,11 @@ set(OLD_CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 FetchContent_MakeAvailable(kaldi)
 
 if (NOT APPLE)
+    target_compile_definitions(kaldi-base
+        PUBLIC
+            HAVE_OPENBLAS
+    )
+
     target_link_libraries(kaldi-base
         PRIVATE
             $<BUILD_INTERFACE:openblas>
