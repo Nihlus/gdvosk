@@ -97,6 +97,8 @@ if (NOT APPLE)
     set(CMAKE_POLICY_DEFAULT_CMP0048 NEW) # OK, BLAS sets version properties after project call
 
     set(ONLY_CBLAS 1 CACHE INTERNAL "")
+    set(BUILD_TESTING OFF CACHE INTERNAL "")
+    set(C_LAPACK ON CACHE INTERNAL "")
 
     if ("${GODOT_ARCH}" STREQUAL "x86_32" OR "${GODOT_ARCH}" STREQUAL "x86_64")
         set(DYNAMIC_ARCH 1 CACHE INTERNAL "")
@@ -118,13 +120,6 @@ if (NOT APPLE)
         OpenBLAS
             GIT_REPOSITORY https://github.com/xianyi/OpenBLAS
             GIT_TAG v0.3.28
-    )
-
-    # CLAPACK
-    FetchContent_Declare(
-        clapack
-            GIT_REPOSITORY https://github.com/alphacep/clapack
-            GIT_TAG c13f1973ac5282c28dad9330e46d940ec2eee291
     )
 
     if (ANDROID)
@@ -151,7 +146,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(openfst)
 
 if (NOT APPLE)
-    FetchContent_MakeAvailable(OpenBLAS clapack)
+    FetchContent_MakeAvailable(OpenBLAS)
 endif ()
 
 # Kaldi screws with the install prefix, so we'll have to work around this
@@ -163,9 +158,6 @@ if (NOT APPLE)
     target_link_libraries(kaldi-base
         PRIVATE
             $<BUILD_INTERFACE:openblas>
-            $<BUILD_INTERFACE:blas>
-            $<BUILD_INTERFACE:f2c>
-            $<BUILD_INTERFACE:lapack>
     )
 endif ()
 
