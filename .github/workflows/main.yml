@@ -93,7 +93,7 @@ jobs:
       - name: Normalize install path (Windows)
         if: matrix.config.target == 'windows'
         run: >
-          echo "INSTALL_PATH=$(cygpath -u '${{ github.workspace }}'')/install-${{ matrix.build_type }}" >> $GITHUB_OUTPUT
+          echo "INSTALL_PATH=$(cygpath -u '${{ github.workspace }}')/install-${{ matrix.build_type }}" >> $GITHUB_OUTPUT
         id: install_path
 
       - name: Configure (Windows)
