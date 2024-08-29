@@ -46,6 +46,7 @@ jobs:
             autotools
             automake
             libtool
+            mingw-w64-x86_64-gcc
 
       - name: Install Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
