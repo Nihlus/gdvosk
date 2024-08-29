@@ -13,16 +13,12 @@ jobs:
       matrix:
         build_type: ['Debug', 'Release']
         config:
-          - { name: '🍏 macOS Clang', os: macos-latest, target: macos, arch: universal, shell: bash }
-          - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux, arch: x86_64, shell: bash }
-          - { name: '🪟 Windows MinGW-w64', os: ubuntu-latest, target: windows, arch: x86_64, shell: 'msys2 {0}' }
-          - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a, shell: bash }
-          - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a, shell: bash }
-          - { name: '🌐 Web WASM32', os: ubuntu-latest, target: web, arch: wasm32, shell: bash }
-
-    defaults:
-      run:
-        shell: ${{ matrix.config.shell }}
+          - { name: '🍏 macOS Clang', os: macos-latest, target: macos, arch: universal }
+          - { name: '🐧 Linux GCC', os: ubuntu-latest, target: linux, arch: x86_64 }
+          - { name: '🪟 Windows MinGW-w64', os: ubuntu-latest, target: windows, arch: x86_64 }
+          - { name: '🤖 Android GCC ARM64', os: ubuntu-latest, target: android, arch: arm64-v8a }
+          - { name: '🤖 Android GCC ARM32', os: ubuntu-latest, target: android, arch: armeabi-v7a }
+          - { name: '🌐 Web WASM32', os: ubuntu-latest, target: web, arch: wasm32 }
 
     name: 🛠 Build / ${{ matrix.config.name }} (${{ matrix.build_type }})
     runs-on: ${{ matrix.config.os }}
