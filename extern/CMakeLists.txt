@@ -28,14 +28,18 @@ if (CMAKE_CROSSCOMPILING)
             set(OPENFST_TARGET "i686-linux-android")
         endif ()
 
+        set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
         set(OPENFST_COMPILER_FLAGS "${OPENFST_COMPILER_FLAGS} --target=${OPENFST_TARGET}${ANDROID_PLATFORM}")
         set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=${OPENFST_TARGET}")
+    elseif (MINGW)
+        set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
+        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=x86_64-w64-mingw32")
     elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
         set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=wasm32-unknown-wasi")
     endif ()
 endif ()
 
-if (ANDROID)
+if (ANDROID OR MINGW)
     add_compile_definitions(
         FST_NO_DYNAMIC_LINKING
     )
@@ -67,20 +71,27 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     )
 endif ()
 
-if (NOT "${GODOT_ARCH}" STREQUAL "wasm32")
+if (MINGW)
     FetchContent_Declare(
         kaldi
         GIT_REPOSITORY https://github.com/alphacep/kaldi
-        GIT_TAG bc5baf14231660bd50b7d05788865b4ac6c34481 # "vosk" branch head
+        GIT_TAG 8b7fecf92b329b7253d9d1cd97898c8b13f9aef3 # "vosk-android" branch head
         OVERRIDE_FIND_PACKAGE
     )
-else ()
+elseif (NOT "${GODOT_ARCH}" STREQUAL "wasm32")
     FetchContent_Declare(
         kaldi
         GIT_REPOSITORY https://github.com/alphacep/kaldi
         GIT_TAG bc5baf14231660bd50b7d05788865b4ac6c34481 # "vosk" branch where the WASM patch applies
         PATCH_COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/patches/kaldi.patch
         UPDATE_DISCONNECTED 1
+        OVERRIDE_FIND_PACKAGE
+    )
+else ()
+    FetchContent_Declare(
+        kaldi
+        GIT_REPOSITORY https://github.com/alphacep/kaldi
+        GIT_TAG bc5baf14231660bd50b7d05788865b4ac6c34481 # "vosk" branch head
         OVERRIDE_FIND_PACKAGE
     )
 endif ()
@@ -262,4 +273,7 @@ target_link_directories(fstngram
 )
 
 add_dependencies(kaldi-base openfst)
-
+target_compile_features(kaldi-base
+    PUBLIC
+        cxx_std_17
+)
