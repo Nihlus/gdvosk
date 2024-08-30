@@ -44,7 +44,7 @@ if (mold AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     endif ()
 endif ()
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     add_compile_options(
         -Og
     )
