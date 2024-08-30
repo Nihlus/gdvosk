@@ -50,6 +50,12 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${CMAKE_SYSTEM_NAME}" STREQU
     )
 endif ()
 
+if (NOT APPLE)
+    add_compile_options("-Wl,--gc-sections,--as-needed -ffunction-sections -fdata-sections")
+else()
+    add_compile_options("-Wl,-dead_strip")
+endif()
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(GDVOSK_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
 else ()
