@@ -29,18 +29,18 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Dependencies (macOS)
+      - name: Install Base Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
         run: brew install ccache ninja autoconf automake libtool
 
-      - name: Install Dependencies (Linux)
-        if: matrix.config.os == 'ubuntu-latest'
+      - name: Install Base Dependencies (Linux)
+        if: matrix.config.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build autoconf automake mold
 
       - name: Install Dependencies (Windows)
-        if: matrix.config.os == 'ubuntu-latest'
+        if: matrix.config.target == 'windows'
         run: |
           sudo apt-get update
           sudo apt-get install -y mingw-w64
