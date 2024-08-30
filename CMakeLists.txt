@@ -33,6 +33,23 @@ project(gdvosk
     VERSION 1.0.0
 )
 
+# Enable the use of Mold to speed up linking
+find_program(mold
+    NAMES mold
+)
+
+if (mold AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_options("-fuse-ld=mold")
+    endif ()
+endif ()
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    add_compile_options(
+        -Og
+    )
+endif ()
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(GDVOSK_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
 else ()
@@ -80,10 +97,10 @@ endif ()
 
 # Copy over additional files from the support_files directory
 add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/support-files"
-        ${BUILD_OUTPUT_DIR}
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/support-files"
+    ${BUILD_OUTPUT_DIR}
 )
 
 # Create and include version info file from git
