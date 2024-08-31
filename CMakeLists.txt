@@ -40,7 +40,9 @@ find_program(mold
 
 if (mold AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_options("-fuse-ld=mold")
+        add_link_options(
+            LINKER:-fuse-ld=mold
+        )
     endif ()
 endif ()
 
@@ -51,9 +53,24 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${CMAKE_SYSTEM_NAME}" STREQU
 endif ()
 
 if (NOT APPLE)
-    add_compile_options("-Wl,--gc-sections,--as-needed -ffunction-sections -fdata-sections")
+    add_compile_options(
+        -ffunction-sections
+        -fdata-sections
+    )
+
+    if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+        add_link_options(
+            LINKER:--gc-sections,--as-needed
+        )
+    else ()
+        add_link_options(
+                LINKER:--gc-sections
+        )
+    endif ()
 else()
-    add_compile_options("-Wl,-dead_strip")
+    add_link_options(
+        LINKER:-dead_strip
+    )
 endif()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
