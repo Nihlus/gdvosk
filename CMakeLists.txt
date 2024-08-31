@@ -38,7 +38,7 @@ find_program(mold
     NAMES mold
 )
 
-if (mold AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+if (mold AND NOT ANDROID AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         add_link_options(
             LINKER:-fuse-ld=mold
