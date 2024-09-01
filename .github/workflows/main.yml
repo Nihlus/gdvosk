@@ -51,7 +51,7 @@ jobs:
         if: matrix.config.target == 'web'
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.39
+          version: 3.1.64
           actions-cache-folder: emsdk-cache
 
       - name: Setup Android NDK (Android)
