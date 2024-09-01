@@ -116,7 +116,7 @@ jobs:
           -B cmake-build
           -G "Ninja"
           -DEMSCRIPTEN_SYSTEM_PROCESSOR=riscv64
-          -DCMAKE_TOOLCHAIN_FILE=/usr/share/emscripten/cmake/Modules/Platform/Emscripten.cmake
+          -DCMAKE_TOOLCHAIN_FILE=${EMSDK}/upstream//emscripten/cmake/Modules/Platform/Emscripten.cmake
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
