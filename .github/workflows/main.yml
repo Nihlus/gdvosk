@@ -13,11 +13,13 @@ jobs:
       matrix:
         build_type: ['Debug', 'Release']
         config:
-          - { name: '🍏 macOS Clang', os: macos-latest, target: macos, arch: universal }
-          - { name: '🐧 Linux GCC', os: ubuntu-24.04, target: linux, arch: x86_64 }
-          - { name: '🪟 Windows MinGW-w64', os: ubuntu-24.04, target: windows, arch: x86_64 }
+          - { name: '🍏 macOS Clang universal', os: macos-latest, target: macos, arch: universal }
+          - { name: '🐧 Linux GCC x86_64', os: ubuntu-24.04, target: linux, arch: x86_64 }
+          - { name: '🪟 Windows MinGW-w64 x86_64', os: ubuntu-24.04, target: windows, arch: x86_64 }
           - { name: '🤖 Android GCC ARM64', os: ubuntu-24.04, target: android, arch: arm64-v8a }
           - { name: '🤖 Android GCC ARM32', os: ubuntu-24.04, target: android, arch: armeabi-v7a }
+          - { name: '🤖 Android GCC x86', os: ubuntu-24.04, target: android, arch: x86_64 }
+          - { name: '🤖 Android GCC x86_64', os: ubuntu-24.04, target: android, arch: x86 }
           - { name: '🌐 Web WASM32', os: ubuntu-24.04, target: web, arch: wasm32 }
 
     name: 🛠 Build / ${{ matrix.config.name }} (${{ matrix.build_type }})
