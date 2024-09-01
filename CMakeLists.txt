@@ -60,11 +60,13 @@ if (NOT APPLE)
 
     if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
         add_link_options(
-            LINKER:--gc-sections,--as-needed
+            LINKER:--gc-sections
+            LINKER:--as-needed
+            LINKER:--exclude-libs=ALL
         )
     else ()
         add_link_options(
-                LINKER:--gc-sections
+            LINKER:--gc-sections
         )
     endif ()
 else()
