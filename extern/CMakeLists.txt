@@ -209,7 +209,7 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
             SOURCE_DIR ${openfst_SOURCE_DIR}
             BINARY_DIR ${openfst_BINARY_DIR}
             CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${EMSCRIPTEN_ROOT_PATH}/emconfigure ${openfst_SOURCE_DIR}/configure CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
-            BUILD_COMMAND bash -c "emmake make -j && emmake make install"
+            BUILD_COMMAND bash -c "${EMSCRIPTEN_ROOT_PATH}/emmake make -j && ${EMSCRIPTEN_ROOT_PATH}/emmake make install"
             BUILD_BYPRODUCTS
             ${openfst_BINARY_DIR}/lib/libfst.a
             ${openfst_BINARY_DIR}/lib/libfstngram.a
