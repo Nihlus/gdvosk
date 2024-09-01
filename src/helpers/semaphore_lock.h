@@ -16,7 +16,7 @@ namespace gdvosk
         /**
          * Holds a reference to the locked semaphore.
          */
-        godot::Ref<godot::Semaphore> _semaphore;
+        const godot::Ref<godot::Semaphore>& _semaphore;
 
     public:
         /**
