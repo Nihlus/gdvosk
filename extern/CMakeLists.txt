@@ -78,7 +78,7 @@ if (MINGW)
         GIT_TAG 8b7fecf92b329b7253d9d1cd97898c8b13f9aef3 # "vosk-android" branch head
         OVERRIDE_FIND_PACKAGE
     )
-elseif (NOT "${GODOT_ARCH}" STREQUAL "wasm32")
+elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
     FetchContent_Declare(
         kaldi
         GIT_REPOSITORY https://github.com/alphacep/kaldi
@@ -201,6 +201,18 @@ if (ANDROID)
     )
 endif ()
 
+get_directory_property(ALL_COMPILE_FLAGS COMPILE_OPTIONS)
+string(REPLACE ";" " " ALL_COMPILE_FLAGS "${ALL_COMPILE_FLAGS}")
+
+get_directory_property(ALL_LINK_FLAGS LINK_OPTIONS)
+string(REPLACE ";" " " ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+string(REPLACE "LINKER:" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+string(REPLACE "," " " ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+
+string(REPLACE "--gc-sections" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+string(REPLACE "--as-needed" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+string(REPLACE "--exclude-libs=ALL" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
+
 # fix up openfst linkage with kaldi
 if ("${GODOT_ARCH}" STREQUAL "wasm32")
     ExternalProject_Add(
@@ -208,7 +220,7 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
             SOURCE_DIR ${openfst_SOURCE_DIR}
             BINARY_DIR ${openfst_BINARY_DIR}
-            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${EMSCRIPTEN_ROOT_PATH}/emconfigure ${openfst_SOURCE_DIR}/configure CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
+            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${EMSCRIPTEN_ROOT_PATH}/emconfigure ${openfst_SOURCE_DIR}/configure CFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' LDFLAGS='${ALL_LINK_FLAGS}' --prefix=${openfst_BINARY_DIR} --disable-shared --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
             BUILD_COMMAND bash -c "${EMSCRIPTEN_ROOT_PATH}/emmake make -j && ${EMSCRIPTEN_ROOT_PATH}/emmake make install"
             BUILD_BYPRODUCTS
             ${openfst_BINARY_DIR}/lib/libfst.a
@@ -225,7 +237,7 @@ else ()
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
             SOURCE_DIR ${openfst_SOURCE_DIR}
             BINARY_DIR ${openfst_BINARY_DIR}
-            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure ${OPENFST_EXPLICIT_COMPILER} CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${CMAKE_CXX_FLAGS} -g -O3' --prefix=${openfst_BINARY_DIR} --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
+            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure ${OPENFST_EXPLICIT_COMPILER} CFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' LDFLAGS='${ALL_LINK_FLAGS}' --prefix=${openfst_BINARY_DIR} --disable-shared --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
             BUILD_COMMAND bash -c "make -j && make install"
             BUILD_BYPRODUCTS
                 ${openfst_BINARY_DIR}/lib/libfst.a

@@ -85,11 +85,37 @@ include(godot-helpers)
 include(ccache)
 
 # emscripten needs some massaging
+option(WASM_ENABLE_THREADS "Enables thread support in WASM builds" ON)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 
-    set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-s SIDE_MODULE=1")
-    set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-s SIDE_MODULE=1")
+    set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-sSIDE_MODULE=1")
+    set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-sSIDE_MODULE=1")
+
+    # other stuff ported from Godot
+    if (WASM_ENABLE_THREADS)
+        add_compile_options(
+            -pthread
+        )
+
+        add_link_options(
+            -pthread
+        )
+    endif ()
+
+    add_compile_options(
+        -sSUPPORT_LONGJMP=wasm
+    )
+
+    add_link_options(
+        -sSUPPORT_LONGJMP=wasm
+        -sWASM_BIGINT
+    )
+
+    add_compile_definitions(
+        WEB_ENABLED
+        UNIX_ENABLED
+    )
 endif ()
 
 # Create our library
