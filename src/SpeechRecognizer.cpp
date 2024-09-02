@@ -171,7 +171,7 @@ void SpeechRecognizer::update_vosk_data()
 void SpeechRecognizer::stop_voice_recognition()
 {
     _should_worker_run = false;
-    if (_worker.is_valid() && _worker->is_alive())
+    if (_worker.is_valid())
     {
         _worker->wait_to_finish();
         _worker.unref();
@@ -208,6 +208,12 @@ void SpeechRecognizer::worker_main()
     while (_should_worker_run)
     {
         OS::get_singleton()->delay_usec(interval_usec);
+
+        if (_bus_semaphore == nullptr || _model_semaphore == nullptr)
+        {
+            // no longer able to run
+            return;
+        }
 
         //
         PackedVector2Array data;
@@ -285,4 +291,9 @@ SpeechRecognizer::SpeechRecognizer()
 
     _bus_semaphore.instantiate();
     _bus_semaphore->post();
+}
+
+SpeechRecognizer::~SpeechRecognizer()
+{
+    stop_voice_recognition();
 }

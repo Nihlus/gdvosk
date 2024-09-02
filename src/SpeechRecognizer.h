@@ -83,6 +83,8 @@ namespace gdvosk
          */
         explicit SpeechRecognizer();
 
+        ~SpeechRecognizer() override;
+
         void set_silence_timeout(float silence_timeout);
         [[nodiscard]] float get_silence_timeout() const;
 
