@@ -6,13 +6,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 # Godot
 add_subdirectory(godot-cpp)
 set_target_properties(godot-cpp
-        PROPERTIES
+    PROPERTIES
         CXX_VISIBILITY_PRESET hidden
 )
 
 # openfst
 set(OPENFST_EXTRA_FLAGS "")
-set(OPENFST_COMPILER_FLAGS "")
 set(OPENFST_EXTRA_CONFIGURE_FLAGS "")
 set(OPENFST_TARGET "")
 
@@ -28,8 +27,11 @@ if (CMAKE_CROSSCOMPILING)
             set(OPENFST_TARGET "i686-linux-android")
         endif ()
 
+        add_compile_options(
+            --target=${OPENFST_TARGET}${ANDROID_PLATFORM}
+        )
+
         set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
-        set(OPENFST_COMPILER_FLAGS "${OPENFST_COMPILER_FLAGS} --target=${OPENFST_TARGET}${ANDROID_PLATFORM}")
         set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=${OPENFST_TARGET}")
     elseif (MINGW)
         set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
@@ -229,7 +231,7 @@ if ("${GODOT_ARCH}" STREQUAL "wasm32")
 else ()
     set(OPENFST_EXPLICIT_COMPILER "")
     if (NOT APPLE)
-        set (OPENFST_EXPLICIT_COMPILER "CC='${CMAKE_C_COMPILER} ${OPENFST_COMPILER_FLAGS}' CXX='${CMAKE_CXX_COMPILER} ${OPENFST_COMPILER_FLAGS}'")
+        set (OPENFST_EXPLICIT_COMPILER "CC='${CMAKE_C_COMPILER}' CXX='${CMAKE_CXX_COMPILER}'")
     endif ()
 
     ExternalProject_Add(
