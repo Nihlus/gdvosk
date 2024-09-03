@@ -6,6 +6,9 @@ if ("${GODOT_ARCH}" STREQUAL "arm64")
 elseif ("${GODOT_ARCH}" STREQUAL "arm32")
     set(SYSTEM_TARGET "armv7a-linux-gnu")
     set(SYSTEM_MARCH "armv7-a")
+    add_compile_options(
+        -mfpu=neon
+    )
 elseif ("${GODOT_ARCH}" STREQUAL "x86_64")
     set(SYSTEM_TARGET "x86_64-linux-gnu")
     set(SYSTEM_MARCH "x86-64")

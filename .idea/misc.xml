@@ -10,6 +10,7 @@
       <file path="$PROJECT_DIR$/cmake-build-debug-aarch64" />
       <file path="$PROJECT_DIR$/cmake-build-debug-android-arm32" />
       <file path="$PROJECT_DIR$/cmake-build-debug-android-arm64" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-armv7-a" />
       <file path="$PROJECT_DIR$/cmake-build-debug-mingw-w64" />
       <file path="$PROJECT_DIR$/cmake-build-debug-wasm32" />
     </excludeRoots>
