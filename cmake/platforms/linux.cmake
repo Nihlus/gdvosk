@@ -1,3 +1,5 @@
+include(CheckCXXCompilerFlag)
+
 if ("${GODOT_ARCH}" STREQUAL "arm64")
     set(SYSTEM_TARGET "aarch64-linux-gnu")
     set(SYSTEM_MARCH "armv8-a")
@@ -16,7 +18,8 @@ add_compile_options(
     -Wwrite-strings
 )
 
-if (CMAKE_CROSSCOMPILING)
+check_cxx_compiler_flag("--target=${SYSTEM_TARGET}" USES_TARGET_FLAG)
+if (CMAKE_CROSSCOMPILING AND USES_TARGET_FLAG)
     add_compile_options(
         --target=${SYSTEM_TARGET}
     )
