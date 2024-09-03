@@ -99,7 +99,11 @@ namespace gdvosk
         void stop_voice_recognition();
         void start_voice_recognition();
 
-        void worker_main();
+        void worker_main
+        (
+            godot::Ref<godot::Semaphore> bus_semaphore,
+            godot::Ref<godot::Semaphore> model_semaphore
+        );
     };
 }
 

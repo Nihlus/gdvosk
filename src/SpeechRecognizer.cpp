@@ -189,10 +189,23 @@ void SpeechRecognizer::start_voice_recognition()
     _should_worker_run = true;
 
     _worker.instantiate();
-    _worker->start(callable_mp(this, &SpeechRecognizer::worker_main));
+
+    auto callable = callable_mp(this, &SpeechRecognizer::worker_main).bind
+    (
+        _bus_semaphore,
+        _model_semaphore
+    );
+
+    _worker->start(callable);
 }
 
-void SpeechRecognizer::worker_main()
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "performance-unnecessary-value-param"
+void SpeechRecognizer::worker_main
+(
+    godot::Ref<godot::Semaphore> bus_semaphore,
+    godot::Ref<godot::Semaphore> model_semaphore
+)
 {
     constexpr auto interval_usec = 100000;
 
@@ -209,16 +222,10 @@ void SpeechRecognizer::worker_main()
     {
         OS::get_singleton()->delay_usec(interval_usec);
 
-        if (_bus_semaphore == nullptr || _model_semaphore == nullptr)
-        {
-            // no longer able to run
-            return;
-        }
-
         //
         PackedVector2Array data;
         {
-            semaphore_lock lock(_bus_semaphore);
+            semaphore_lock lock(bus_semaphore);
             if (_effect == nullptr)
             {
                 continue;
@@ -232,7 +239,7 @@ void SpeechRecognizer::worker_main()
         {
             Error setup;
             {
-                semaphore_lock lock(_model_semaphore);
+                semaphore_lock lock(model_semaphore);
                 setup = recognizer->setup(_vosk_model, static_cast<float>(mix_rate));
             }
 
@@ -283,6 +290,7 @@ void SpeechRecognizer::worker_main()
         }
     }
 }
+#pragma clang diagnostic pop
 
 SpeechRecognizer::SpeechRecognizer()
 {
