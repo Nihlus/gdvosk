@@ -10,6 +10,8 @@ script/source = "extends Node3D
 @onready var effect :=  AudioServer.get_bus_effect(AudioServer.get_bus_index(\"Record\"), 0) as AudioEffectCapture
 
 func _ready() -> void:
+    self.player.play()
+
     var model := load(\"res://vosk-model-small-en-us-0.15.vosk\") as VoskModel
     var stream := load(\"res://test-mono-44100.wav\") as AudioStreamWAV
 
@@ -30,13 +32,6 @@ func _ready() -> void:
     print(recognizer.get_final_result())
 
     recognizer.reset()
-
-func _process(delta: float) -> void:
-    if self.player.stream == null || self.player.playing:
-        return
-
-    print(\"started playing\")
-    self.player.play()
 
 func _on_speech_recognizer_result(data: Dictionary) -> void:
     print(data)
