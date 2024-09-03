@@ -16,15 +16,15 @@ add_compile_options(
     -Wwrite-strings
 )
 
-add_compile_options(
-    --target=${SYSTEM_TARGET}
-    -march=${SYSTEM_MARCH}
-)
+if (CMAKE_CROSSCOMPILING)
+    add_compile_options(
+        --target=${SYSTEM_TARGET}
+    )
 
-add_link_options(
-    LINKER:--target=${SYSTEM_TARGET}
-    LINKER:-march=${SYSTEM_MARCH}
-)
+    add_link_options(
+        LINKER:--target=${SYSTEM_TARGET}
+    )
+endif ()
 
 add_compile_definitions(
     LINUX_ENABLED
