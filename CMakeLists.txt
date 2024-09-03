@@ -1,11 +1,9 @@
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 
 cmake_minimum_required(VERSION 3.22)
 
 # Add paths to modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-
-message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
 
 # Always build position independent code
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -21,102 +19,31 @@ endif ()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
-# Build universal lib on macOS
-# Note that CMAKE_OSX_ARCHITECTURES must be set before project().
-if (APPLE)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
-endif ()
-
 # Main project information
 project(gdvosk
     LANGUAGES CXX
     VERSION 1.0.0
 )
 
-# Enable the use of Mold to speed up linking
-find_program(mold
-    NAMES mold
-)
+include(ccache)
 
-if (mold AND NOT ANDROID AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_link_options(
-            LINKER:-fuse-ld=mold
-        )
-    endif ()
-endif ()
+include(godot-helpers)
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+include(platforms/${GODOT_SYSTEM_NAME} OPTIONAL)
+include(mold)
+include(trim-sections)
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
     add_compile_options(
         -Og
     )
 endif ()
-
-if (NOT APPLE)
-    add_compile_options(
-        -ffunction-sections
-        -fdata-sections
-    )
-
-    if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-        add_link_options(
-            LINKER:--gc-sections
-            LINKER:--as-needed
-            LINKER:--exclude-libs=ALL
-        )
-    else ()
-        add_link_options(
-            LINKER:--gc-sections
-        )
-    endif ()
-else()
-    add_link_options(
-        LINKER:-dead_strip
-    )
-endif()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(GDVOSK_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/sample/addons)
 else ()
     set(GDVOSK_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 endif()
-
-include(godot-helpers)
-include(ccache)
-
-# emscripten needs some massaging
-option(WASM_ENABLE_THREADS "Enables thread support in WASM builds" ON)
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
-
-    set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-sSIDE_MODULE=1")
-    set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-sSIDE_MODULE=1")
-
-    # other stuff ported from Godot
-    if (WASM_ENABLE_THREADS)
-        add_compile_options(
-            -pthread
-        )
-
-        add_link_options(
-            -pthread
-        )
-    endif ()
-
-    add_compile_options(
-        -sSUPPORT_LONGJMP=wasm
-    )
-
-    add_link_options(
-        -sSUPPORT_LONGJMP=wasm
-        -sWASM_BIGINT
-    )
-
-    add_compile_definitions(
-        WEB_ENABLED
-        UNIX_ENABLED
-    )
-endif ()
 
 # Create our library
 add_library(${PROJECT_NAME} SHARED)

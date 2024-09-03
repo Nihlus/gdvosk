@@ -13,32 +13,17 @@ set_target_properties(godot-cpp
 # openfst
 set(OPENFST_EXTRA_FLAGS "")
 set(OPENFST_EXTRA_CONFIGURE_FLAGS "")
-set(OPENFST_TARGET "")
+
+if ("${GODOT_SYSTEM_NAME}" STREQUAL "android")
+    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
+elseif ("${GODOT_SYSTEM_NAME}" STREQUAL "windows")
+    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
+endif ()
+
+set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -fPIC")
 
 if (CMAKE_CROSSCOMPILING)
-    if (ANDROID)
-        if ("${GODOT_ARCH}" STREQUAL "arm64")
-            set(OPENFST_TARGET "aarch64-linux-android")
-        elseif ("${GODOT_ARCH}" STREQUAL "arm32")
-            set(OPENFST_TARGET "armv7a-linux-androideabi")
-        elseif ("${GODOT_ARCH}" STREQUAL "x86_64")
-            set(OPENFST_TARGET "x86_64-linux-android")
-        elseif ("${GODOT_ARCH}" STREQUAL "x86_32")
-            set(OPENFST_TARGET "i686-linux-android")
-        endif ()
-
-        add_compile_options(
-            --target=${OPENFST_TARGET}${ANDROID_PLATFORM}
-        )
-
-        set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
-        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=${OPENFST_TARGET}")
-    elseif (MINGW)
-        set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
-        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=x86_64-w64-mingw32")
-    elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
-        set(OPENFST_EXTRA_CONFIGURE_FLAGS "${OPENFST_EXTRA_CONFIGURE_FLAGS} --host=wasm32-unknown-wasi")
-    endif ()
+    set(OPENFST_EXTRA_CONFIGURE_FLAGS "--host=${SYSTEM_TARGET}")
 endif ()
 
 if (ANDROID OR MINGW)
@@ -68,9 +53,7 @@ set(KALDI_BUILD_EXE OFF CACHE INTERNAL "")
 set(KALDI_BUILD_TEST OFF CACHE INTERNAL "")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    add_compile_options(
-        -msimd128
-    )
+
 endif ()
 
 if (MINGW)
@@ -120,7 +103,6 @@ if (NOT APPLE)
         set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
     elseif ("${GODOT_ARCH}" STREQUAL "arm64")
         set(TARGET ARMV8 CACHE INTERNAL "")
-        set(ARM_SOFTFP_ABI 1 CACHE INTERNAL "")
     elseif ("${GODOT_ARCH}" STREQUAL "wasm32")
         set(TARGET RISCV64_GENERIC CACHE INTERNAL "")
     endif ()
@@ -138,13 +120,6 @@ if (NOT APPLE)
         add_compile_options(
             -Wno-format-security
         )
-
-        if ("${GODOT_ARCH}" STREQUAL "arm32")
-            add_compile_options(
-                -mfloat-abi=softfp
-                -mfpu=neon
-            )
-        endif ()
     endif ()
 endif ()
 

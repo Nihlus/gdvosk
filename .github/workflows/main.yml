@@ -132,6 +132,7 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake
           -DANDROID_NDK=${{ steps.setup-ndk.outputs.ndk-path }}
           -DANDROID_ABI=${{ matrix.config.arch }}
+          -DANDROID_ARM_MODE=arm
           -DANDROID_PLATFORM=33
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-${{ matrix.build_type }}
