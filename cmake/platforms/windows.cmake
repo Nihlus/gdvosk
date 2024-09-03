@@ -10,10 +10,8 @@ endif ()
 
 add_compile_options(
     -Wwrite-strings
-)
-
-add_link_options(
-    LINKER:--no-undefined
+    -static-libgcc
+    -static-libstdc++
 )
 
 add_compile_definitions(
