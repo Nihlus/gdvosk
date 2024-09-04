@@ -77,7 +77,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           max-size: '10G'
-          key: ${{ matrix.config.os }}-${{ matrix.build_type }}
+          key: ${{ matrix.config.name }}-${{ matrix.build_type }}
 
       - name: Configure (Linux)
         if: matrix.config.target == 'linux'
