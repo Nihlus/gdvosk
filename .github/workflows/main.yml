@@ -13,14 +13,18 @@ jobs:
       matrix:
         build_type: ['Debug', 'Release']
         config:
-          - { name: 'macOS Clang universal', os: macos-latest, target: macos, arch: universal }
-          - { name: 'Linux GCC x86_64', os: ubuntu-24.04, target: linux, arch: x86_64 }
-          - { name: 'Windows MinGW-w64 x86_64', os: ubuntu-24.04, target: windows, arch: x86_64 }
-          - { name: 'Android GCC ARM64', os: ubuntu-24.04, target: android, arch: arm64-v8a }
-          - { name: 'Android GCC ARM32', os: ubuntu-24.04, target: android, arch: armeabi-v7a }
-          - { name: 'Android GCC x86', os: ubuntu-24.04, target: android, arch: x86 }
-          - { name: 'Android GCC x86_64', os: ubuntu-24.04, target: android, arch: x86_64 }
-          - { name: 'Web WASM32', os: ubuntu-24.04, target: web, arch: wasm32 }
+          - { name: 'macos-universal', os: macos-latest, target: macos }
+          - { name: 'linux-x86_64', os: ubuntu-24.04, target: linux, toolchain_prefix: x86_64-linux-gnu }
+          - { name: 'linux-x86_32', os: ubuntu-24.04, target: linux, toolchain_prefix: i686-linux-gnu }
+          - { name: 'linux-arm64', os: ubuntu-24.04, target: linux, toolchain_prefix: aarch64-linux-gnu }
+          - { name: 'linux-arm32', os: ubuntu-24.04, target: linux, toolchain_prefix: arm-linux-gnueabihf }
+          - { name: 'windows-x86_64', os: ubuntu-24.04, target: windows, toolchain_prefix: x86_64-w64-mingw32 }
+          - { name: 'windows-x86_32', os: ubuntu-24.04, target: windows, toolchain_prefix: i686-w64-mingw32 }
+          - { name: 'android-arm64', os: ubuntu-24.04, target: android, arch: arm64-v8a }
+          - { name: 'android-arm32', os: ubuntu-24.04, target: android, arch: armeabi-v7a }
+          - { name: 'android-x86_32', os: ubuntu-24.04, target: android, arch: x86 }
+          - { name: 'android-x86_64', os: ubuntu-24.04, target: android, arch: x86_64 }
+          - { name: 'web-wasm32', os: ubuntu-24.04, target: web }
 
     name: ${{ matrix.config.name }} (${{ matrix.build_type }})
     runs-on: ${{ matrix.config.os }}
@@ -40,6 +44,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build autoconf automake mold
+
+      - name: Install Dependencies (Linux)
+        if: matrix.config.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++${{ matrix.config.toolchain_prefix }}
 
       - name: Install Dependencies (Windows)
         if: matrix.config.target == 'windows'
@@ -77,6 +87,8 @@ jobs:
           cmake
           -B cmake-build
           -G "Ninja"
+          -DTOOLCHAIN_PREFIX=${{ matrix.config.toolchain_prefix }}
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/gcc-linux-gnu.cmake
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
@@ -89,7 +101,8 @@ jobs:
           cmake
           -B cmake-build
           -G "Ninja"
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/mingw-w64-x86_64.cmake
+          -DTOOLCHAIN_PREFIX=${{ matrix.config.toolchain_prefix }}
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/gcc-w64-mingw.cmake
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .

@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CMakePythonSetting">
+    <option name="pythonIntegrationState" value="YES" />
+  </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <sourceRoots>
       <file path="$PROJECT_DIR$/src" />
     </sourceRoots>
     <excludeRoots>
-      <file path="$PROJECT_DIR$/cmake-build-debug" />
-      <file path="$PROJECT_DIR$/cmake-build-debug-aarch64" />
       <file path="$PROJECT_DIR$/cmake-build-debug-android-arm32" />
       <file path="$PROJECT_DIR$/cmake-build-debug-android-arm64" />
-      <file path="$PROJECT_DIR$/cmake-build-debug-armv7-a" />
-      <file path="$PROJECT_DIR$/cmake-build-debug-mingw-w64" />
-      <file path="$PROJECT_DIR$/cmake-build-debug-wasm32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-android-x86_32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-android-x86_64" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-linux-arm32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-linux-arm64" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-linux-x86_32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-linux-x86_64" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-web-wasm32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-windows-x86_32" />
+      <file path="$PROJECT_DIR$/cmake-build-debug-windows-x86_64" />
     </excludeRoots>
   </component>
 </project>
