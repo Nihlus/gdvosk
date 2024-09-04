@@ -160,7 +160,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.config.target }}-${{ matrix.config.arch }}-${{ github.event.repository.name }}-${{ matrix.build_type }}
+          name: ${{ matrix.config.name }}-${{ github.event.repository.name }}-${{ matrix.build_type }}
           path: |
             ${{ github.workspace }}/install-${{ matrix.build_type }}/*
 
