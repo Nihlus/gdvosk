@@ -14,6 +14,7 @@ jobs:
         build_type: ['Debug', 'Release']
         config:
           - { name: 'macos-universal', os: macos-latest, target: macos }
+          - { name: 'ios-universal', os: macos-latest, target: ios }
           - { name: 'linux-x86_64', os: ubuntu-24.04, target: linux, toolchain_prefix: x86_64-linux-gnu }
           - { name: 'linux-x86_32', os: ubuntu-24.04, target: linux, toolchain_prefix: i686-linux-gnu }
           - { name: 'linux-arm64', os: ubuntu-24.04, target: linux, toolchain_prefix: aarch64-linux-gnu }
@@ -107,7 +108,7 @@ jobs:
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
 
-      - name: Configure (OSX)
+      - name: Configure (macOS)
         if: matrix.config.target == 'macos'
         run: >
           mkdir cmake-build
@@ -115,10 +116,26 @@ jobs:
           cmake
           -B cmake-build
           -G "Ninja"
-          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          -DPLATFORM=MAC_UNIVERSAL
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/clang-apple.cmake
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
           .
+
+      - name: Configure (iOS)
+        if: matrix.config.target == 'ios'
+        run: >
+          mkdir cmake-build
+
+          cmake
+          -B cmake-build
+          -G "Xcode"
+          -DPLATFORM=OS64COMBINED
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/clang-apple.cmake
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          --install-prefix ${{ github.workspace }}/install-${{ matrix.build_type }}
+          .
+          
 
       - name: Configure (Web)
         if: matrix.config.target == 'web'
