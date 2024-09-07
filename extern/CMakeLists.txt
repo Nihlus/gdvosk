@@ -19,7 +19,7 @@ set(OPENFST_LOOKAHEAD_FSTS ON CACHE INTERNAL "")
 FetchContent_Declare(
     openfst
     GIT_REPOSITORY https://github.com/Nihlus/openfst
-    GIT_TAG 619d1e6161e980044292e03c65dc0971f6f95976
+    GIT_TAG e88d8a077ec87c3a866578d3441c020f6cd768d7
     OVERRIDE_FIND_PACKAGE
 )
 
