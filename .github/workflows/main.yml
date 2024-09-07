@@ -172,7 +172,7 @@ jobs:
         run: cmake --build cmake-build
 
       - name: Install
-        run: cmake --install cmake-build
+        run: cmake --install cmake-build --config ${{ matrix.build_type }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
