@@ -46,7 +46,11 @@ else ()
 endif()
 
 # Create our library
-add_library(${PROJECT_NAME} SHARED)
+if ("${GODOT_PLATFORM}" STREQUAL "ios")
+    add_library(${PROJECT_NAME} STATIC)
+else ()
+    add_library(${PROJECT_NAME} SHARED)
+endif ()
 
 target_compile_features(${PROJECT_NAME}
     PRIVATE
