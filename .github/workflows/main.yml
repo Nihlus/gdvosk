@@ -38,13 +38,13 @@ jobs:
 
       - name: Install Base Dependencies (macOS)
         if: matrix.config.os == 'macos-latest'
-        run: brew install ccache ninja autoconf automake libtool
+        run: brew install ccache ninja libtool
 
       - name: Install Base Dependencies (Linux)
         if: matrix.config.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache ninja-build autoconf automake mold
+          sudo apt-get install -y ccache ninja-build mold
 
       - name: Install Dependencies (Linux)
         if: matrix.config.target == 'linux'
