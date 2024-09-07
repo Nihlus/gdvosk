@@ -169,7 +169,7 @@ jobs:
           .
 
       - name: Build
-        run: cmake --build cmake-build
+        run: cmake --build cmake-build --config ${{ matrix.build_type }}
 
       - name: Install
         run: cmake --install cmake-build --config ${{ matrix.build_type }}
