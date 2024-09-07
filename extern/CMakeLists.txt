@@ -11,35 +11,15 @@ set_target_properties(godot-cpp
 )
 
 # openfst
-set(OPENFST_EXTRA_FLAGS "")
-set(OPENFST_EXTRA_CONFIGURE_FLAGS "")
-
-if ("${GODOT_SYSTEM_NAME}" STREQUAL "android")
-    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
-elseif ("${GODOT_SYSTEM_NAME}" STREQUAL "windows")
-    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -DFST_NO_DYNAMIC_LINKING")
-endif ()
-
-set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -fPIC")
-
-if (CMAKE_CROSSCOMPILING)
-    set(OPENFST_EXTRA_CONFIGURE_FLAGS "--host=${SYSTEM_TARGET}")
-endif ()
-
-if (ANDROID OR MINGW)
-    add_compile_definitions(
-        FST_NO_DYNAMIC_LINKING
-    )
-endif ()
-
-if (APPLE)
-    set(OPENFST_EXTRA_FLAGS "${OPENFST_EXTRA_FLAGS} -arch x86_64 -arch arm64")
-endif ()
+set(OPENFST_BIN OFF CACHE INTERNAL "")
+set(OPENFST_FAR ON CACHE INTERNAL "")
+set(OPENFST_NGRAM_FSTS ON CACHE INTERNAL "")
+set(OPENFST_LOOKAHEAD_FSTS ON CACHE INTERNAL "")
 
 FetchContent_Declare(
     openfst
-    GIT_REPOSITORY https://github.com/alphacep/openfst
-    GIT_TAG 18e94e63870ebcf79ebb42b7035cd3cb626ec090
+    GIT_REPOSITORY https://github.com/Nihlus/openfst
+    GIT_TAG d7705ac568807c84361f68f2a205b7e6e81b3fb0
     OVERRIDE_FIND_PACKAGE
 )
 
@@ -150,6 +130,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(openfst)
 
+FetchContent_GetProperties(openfst
+    BINARY_DIR OPENFST_BINARY_DIR
+)
+
+if (ANDROID OR MINGW)
+    target_compile_definitions(fst
+        PUBLIC
+            FST_NO_DYNAMIC_LINKING
+    )
+endif ()
+
 if (NOT APPLE)
     FetchContent_MakeAvailable(OpenBLAS)
 endif ()
@@ -196,91 +187,4 @@ if (ANDROID)
     )
 endif ()
 
-get_directory_property(ALL_COMPILE_FLAGS COMPILE_OPTIONS)
-string(REPLACE ";" " " ALL_COMPILE_FLAGS "${ALL_COMPILE_FLAGS}")
 
-get_directory_property(ALL_LINK_FLAGS LINK_OPTIONS)
-string(REPLACE ";" " " ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-string(REPLACE "LINKER:" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-string(REPLACE "," " " ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-
-string(REPLACE "--gc-sections" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-string(REPLACE "--as-needed" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-string(REPLACE "--exclude-libs=ALL" "" ALL_LINK_FLAGS "${ALL_LINK_FLAGS}")
-
-# fix up openfst linkage with kaldi
-if ("${GODOT_ARCH}" STREQUAL "wasm32")
-    ExternalProject_Add(
-        openfst
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
-            SOURCE_DIR ${openfst_SOURCE_DIR}
-            BINARY_DIR ${openfst_BINARY_DIR}
-            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${EMSCRIPTEN_ROOT_PATH}/emconfigure ${openfst_SOURCE_DIR}/configure CFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' LDFLAGS='${ALL_LINK_FLAGS}' --prefix=${openfst_BINARY_DIR} --disable-shared --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
-            BUILD_COMMAND bash -c "${EMSCRIPTEN_ROOT_PATH}/emmake make -j && ${EMSCRIPTEN_ROOT_PATH}/emmake make install"
-            BUILD_BYPRODUCTS
-            ${openfst_BINARY_DIR}/lib/libfst.a
-            ${openfst_BINARY_DIR}/lib/libfstngram.a
-    )
-else ()
-    set(OPENFST_EXPLICIT_COMPILER "")
-    if (NOT APPLE)
-        set (OPENFST_EXPLICIT_COMPILER "CC='${CMAKE_C_COMPILER}' CXX='${CMAKE_CXX_COMPILER}'")
-    endif ()
-
-    ExternalProject_Add(
-        openfst
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_deps
-            SOURCE_DIR ${openfst_SOURCE_DIR}
-            BINARY_DIR ${openfst_BINARY_DIR}
-            CONFIGURE_COMMAND bash -c "autoreconf -i ${openfst_SOURCE_DIR} && ${openfst_SOURCE_DIR}/configure ${OPENFST_EXPLICIT_COMPILER} CFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' CXXFLAGS='${OPENFST_EXTRA_FLAGS} ${ALL_COMPILE_FLAGS} -g -O3' LDFLAGS='${ALL_LINK_FLAGS}' --prefix=${openfst_BINARY_DIR} --disable-shared --enable-static --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic --disable-bin ${OPENFST_EXTRA_CONFIGURE_FLAGS}"
-            BUILD_COMMAND bash -c "make -j && make install"
-            BUILD_BYPRODUCTS
-                ${openfst_BINARY_DIR}/lib/libfst.a
-                ${openfst_BINARY_DIR}/lib/libfstngram.a
-    )
-endif ()
-
-add_library(fst STATIC IMPORTED GLOBAL)
-add_library(fstngram STATIC IMPORTED GLOBAL)
-
-add_dependencies(fst openfst)
-add_dependencies(fstngram openfst)
-
-set_target_properties(fst
-    PROPERTIES
-        IMPORTED_LOCATION ${openfst_BINARY_DIR}/lib/libfst.a
-)
-
-set_target_properties(fstngram
-    PROPERTIES
-        IMPORTED_LOCATION ${openfst_BINARY_DIR}/lib/libfstngram.a
-)
-
-file(MAKE_DIRECTORY ${openfst_BINARY_DIR}/include)
-target_include_directories(fst
-    INTERFACE
-        ${openfst_BINARY_DIR}/include
-)
-
-target_include_directories(fstngram
-        INTERFACE
-        ${openfst_BINARY_DIR}/include
-)
-
-target_link_directories(fst
-    INTERFACE
-        ${openfst_BINARY_DIR}/lib
-        ${openfst_BINARY_DIR}/lib/fst
-)
-
-target_link_directories(fstngram
-    INTERFACE
-        ${openfst_BINARY_DIR}/lib
-        ${openfst_BINARY_DIR}/lib/fst
-)
-
-add_dependencies(kaldi-base openfst)
-target_compile_features(kaldi-base
-    PUBLIC
-        cxx_std_17
-)
