@@ -10,8 +10,13 @@ endif ()
 
 add_compile_options(
     -Wwrite-strings
+)
+
+add_link_options(
     -static-libgcc
     -static-libstdc++
+    LINKER:-static
+    LINKER:-Bstatic,--whole-archive,-lwinpthread,--no-whole-archive
 )
 
 add_compile_definitions(
