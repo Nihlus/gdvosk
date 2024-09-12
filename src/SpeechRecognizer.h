@@ -5,6 +5,7 @@
 #define SPEECHRECOGNIZER_H
 
 #include <condition_variable>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -72,7 +73,8 @@ namespace gdvosk
         /**
          * Holds the backing data for the silence timeout in microseconds.
          */
-        std::atomic_uint32_t _silence_timeout = 2000000000;
+        std::atomic<std::chrono::microseconds> _silence_timeout =
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(2));
 
     protected:
         static void _bind_methods();
