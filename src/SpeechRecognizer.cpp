@@ -264,7 +264,10 @@ void SpeechRecognizer::worker_main
                     partial_result = new_partial_result;
                     no_change_time_start = steady_clock::now();
 
-                    call_deferred("emit_signal", "partial_result", *partial_result);
+                    if (partial_result->get("partial", "") != "")
+                    {
+                        call_deferred("emit_signal", "partial_result", *partial_result);
+                    }
                 }
 
                 break;
@@ -284,10 +287,25 @@ void SpeechRecognizer::worker_main
         auto now = steady_clock::now();
         if (no_change_time_start.has_value() && (now - *no_change_time_start > _silence_timeout.load()))
         {
-            call_deferred("emit_signal", "final_result", recognizer->get_final_result());
-
             partial_result = std::nullopt;
             no_change_time_start = std::nullopt;
+
+            auto final_result = recognizer->get_final_result();
+            auto final_alternatives = static_cast<Array>(final_result.get("alternatives", Array()));
+
+            if (final_alternatives.is_empty())
+            {
+                continue;
+            }
+
+            auto final_alternative = static_cast<Dictionary>(final_alternatives[0]);
+
+            if (final_alternative.get("text", "") == "")
+            {
+                continue;
+            }
+
+            call_deferred("emit_signal", "final_result", final_result);
         }
     }
 }
