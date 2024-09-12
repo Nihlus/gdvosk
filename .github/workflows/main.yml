@@ -31,6 +31,12 @@ jobs:
     runs-on: ${{ matrix.config.os }}
 
     steps:
+      - name: Free disk space (Linux)
+        if: matrix.config.os == 'ubuntu-24.04'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: false
+    
       - name: Checkout
         uses: actions/checkout@v4
         with:
