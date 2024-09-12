@@ -41,7 +41,7 @@ if (NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
         )
     else ()
         add_compile_options(
-            -O2
+            -O3
         )
     endif ()
 endif ()
