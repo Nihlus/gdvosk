@@ -33,10 +33,17 @@ include(platforms/${GODOT_SYSTEM_NAME} OPTIONAL)
 include(mold)
 include(trim-sections)
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
-    add_compile_options(
-        -Og
-    )
+if (NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        add_compile_options(
+            -O0
+            -ggdb3
+        )
+    else ()
+        add_compile_options(
+            -O2
+        )
+    endif ()
 endif ()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
