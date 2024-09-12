@@ -34,13 +34,13 @@ func _ready() -> void:
     recognizer.reset()
 
 func _on_speech_recognizer_result(data: Dictionary) -> void:
-    print(data)
+    print(\"result: \", data)
 
 func _on_speech_recognizer_partial_result(data: Dictionary) -> void:
-    print(data)
+    print(\"partial:\", data)
 
 func _on_speech_recognizer_final_result(data: Dictionary) -> void:
-    print(data)
+    print(\"final\", data)
 "
 
 [sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_pqcnc"]
