@@ -10,7 +10,6 @@ endif ()
 
 add_compile_options(
     -Wwrite-strings
-    -Wa,-mbig-obj
 )
 
 add_link_options(

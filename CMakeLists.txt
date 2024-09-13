@@ -38,7 +38,6 @@ if (NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
         if ("${GODOT_SYSTEM_NAME}" STREQUAL "windows")
             add_compile_options(
                 -Og # we have major size issues when compiling for Windows, so we need some optimizations even in debug mode
-                -ggdb3
             )
         else ()
             add_compile_options(
