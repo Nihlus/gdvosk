@@ -35,10 +35,10 @@ include(trim-sections)
 
 if (NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        if ("${GODOT_PLATFORM}" STREQUAL "windows")
+        if ("${GODOT_SYSTEM_NAME}" STREQUAL "windows")
             add_compile_options(
-                -O2 # we have major size issues when compiling for Windows, so we need some optimizations even in debug mode
-                -g
+                -Og # we have major size issues when compiling for Windows, so we need some optimizations even in debug mode
+                -ggdb3
             )
         else ()
             add_compile_options(
@@ -60,7 +60,7 @@ else ()
 endif()
 
 # Create our library
-if ("${GODOT_PLATFORM}" STREQUAL "ios")
+if ("${GODOT_SYSTEM_NAME}" STREQUAL "ios")
     add_library(${PROJECT_NAME} STATIC)
 else ()
     add_library(${PROJECT_NAME} SHARED)
