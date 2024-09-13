@@ -35,10 +35,17 @@ include(trim-sections)
 
 if (NOT "${GODOT_SYSTEM_NAME}" STREQUAL "web")
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        add_compile_options(
-            -O0
-            -ggdb3
-        )
+        if ("${GODOT_PLATFORM}" STREQUAL "windows")
+            add_compile_options(
+                -Og # we have major size issues when compiling for Windows, so we need some optimizations even in debug mode
+                -ggdb3
+            )
+        else ()
+            add_compile_options(
+                -O0
+                -ggdb3
+            )
+        endif ()
     else ()
         add_compile_options(
             -O3
