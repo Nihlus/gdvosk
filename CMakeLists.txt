@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 
 cmake_minimum_required(VERSION 3.22)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 # Add paths to modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
