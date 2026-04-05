@@ -16,7 +16,7 @@ does not require multithreading support and can be used without it on HTML5.
 
 ## Installing
 You can get gdvosk by
- * downloading the latest release from Github
+ * downloading the latest release from GitHub
  * assembling a prerelease yourself by grabbing artifacts from the CI pipeline
  * compiling it yourself
 
