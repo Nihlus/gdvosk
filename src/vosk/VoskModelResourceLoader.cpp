@@ -11,17 +11,17 @@
 using namespace godot;
 using namespace gdvosk;
 
-PackedStringArray gdvosk::VoskModelResourceLoader::_get_recognized_extensions() const
+PackedStringArray VoskModelResourceLoader::_get_recognized_extensions() const
 {
     return { "vosk", "voskspk" };
 }
 
-bool gdvosk::VoskModelResourceLoader::_handles_type(const StringName& p_type) const
+bool VoskModelResourceLoader::_handles_type(const StringName& p_type) const
 {
     return p_type == StringName("VoskModel") || p_type == StringName("VoskSpeakerModel");
 }
 
-String gdvosk::VoskModelResourceLoader::_get_resource_type(const String& p_path) const
+String VoskModelResourceLoader::_get_resource_type(const String& p_path) const
 {
     if (p_path.get_extension() == "vosk")
     {
@@ -31,7 +31,7 @@ String gdvosk::VoskModelResourceLoader::_get_resource_type(const String& p_path)
     return "VoskSpeakerModel";
 }
 
-Variant gdvosk::VoskModelResourceLoader::_load
+Variant VoskModelResourceLoader::_load
 (
     const String& p_path,
     const String& p_original_path,
@@ -101,7 +101,7 @@ Variant gdvosk::VoskModelResourceLoader::_load
     auto type = p_path.get_extension();
     if (type == "vosk")
     {
-        Ref<gdvosk::VoskModel> model;
+        Ref<VoskModel> model;
         model.instantiate();
 
         model->load(extracted_model_path);
@@ -111,7 +111,7 @@ Variant gdvosk::VoskModelResourceLoader::_load
 
     if (type == "voskspk")
     {
-        Ref<gdvosk::VoskSpeakerModel> model;
+        Ref<VoskSpeakerModel> model;
         model.instantiate();
 
         model->load(extracted_model_path);
@@ -122,6 +122,6 @@ Variant gdvosk::VoskModelResourceLoader::_load
     return ResourceFormatLoader::_load(p_path, p_original_path, p_use_sub_threads, p_cache_mode);
 }
 
-void gdvosk::VoskModelResourceLoader::_bind_methods()
+void VoskModelResourceLoader::_bind_methods()
 {
 }
