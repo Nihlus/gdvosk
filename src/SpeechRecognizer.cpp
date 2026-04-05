@@ -116,7 +116,10 @@ void SpeechRecognizer::_process(double p_delta)
                 auto confidence = dictionary.get("confidence");
                 auto text = dictionary.get("text");
 
-                emit_signal("result", confidence, text);
+                if (text != "")
+                {
+                    emit_signal("result", confidence, text);
+                }
             }
 
             break;
