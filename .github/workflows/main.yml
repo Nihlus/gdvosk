@@ -33,12 +33,14 @@ jobs:
     steps:
       - name: Free disk space (Linux)
         if: matrix.config.os == 'ubuntu-24.04'
-        uses: jlumbroso/free-disk-space@main
+        uses: endersonmenezes/free-disk-space@v3
         with:
-          android: ${{ matrix.config.target != 'android' }}
+          remove_android: ${{ matrix.config.target != 'android' }}
+          remove_dotnet: true
+          remove_haskell: true
     
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -181,7 +183,7 @@ jobs:
         run: cmake --install cmake-build --config ${{ matrix.build_type }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.config.name }}-${{ github.event.repository.name }}-${{ matrix.build_type }}
           path: |
@@ -192,7 +194,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload merged artifact
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ github.event.repository.name }}
           pattern: '*-${{ github.event.repository.name }}-*'
