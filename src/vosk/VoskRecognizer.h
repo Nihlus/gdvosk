@@ -88,6 +88,12 @@ namespace gdvosk
         );
 
         /**
+         * Determines whether the recognizer is set up and ready to process data.
+         * @return True if the recognizer is ready; otherwise, false.
+         */
+        bool is_set_up() const;
+
+        /**
          * Accepts a stream of audio data, transcribing the audio within it. The audio is expected to be in 16-bit
          * signed PCM format and can be either mono or stereo. Stereo audio will be mixed to mono before processing.
          * @param stream The stream.

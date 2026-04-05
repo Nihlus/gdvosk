@@ -33,14 +33,11 @@ func _ready() -> void:
 
 	recognizer.reset()
 
-func _on_speech_recognizer_result(data: Dictionary) -> void:
-    print(\"result: \", data)
+func _on_speech_recognizer_result(confidence: float, text: String) -> void:
+	print(\"result: \", text)
 
-func _on_speech_recognizer_partial_result(data: Dictionary) -> void:
-    print(\"partial:\", data)
-
-func _on_speech_recognizer_final_result(data: Dictionary) -> void:
-    print(\"final\", data)
+func _on_speech_recognizer_partial_result(text: String) -> void:
+	print(\"partial: \", text)
 "
 
 [sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_pqcnc"]

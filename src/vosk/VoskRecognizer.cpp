@@ -40,9 +40,9 @@ Error gdvosk::VoskRecognizer::setup
 
 Error gdvosk::VoskRecognizer::setup_with_grammar
 (
-    const godot::Ref<VoskModel>& model,
+    const Ref<VoskModel>& model,
     float sample_rate,
-    const godot::PackedStringArray& grammar
+    const PackedStringArray& grammar
 )
 {
     if (_recognizer != nullptr)
@@ -66,6 +66,11 @@ Error gdvosk::VoskRecognizer::setup_with_grammar
     update_recognizer_parameters();
 
     return OK;
+}
+
+bool gdvosk::VoskRecognizer::is_set_up() const
+{
+    return _recognizer != nullptr;
 }
 
 Ref<VoskSpeakerModel> gdvosk::VoskRecognizer::get_speaker_model() const
@@ -161,7 +166,7 @@ void gdvosk::VoskRecognizer::update_recognizer_parameters()
     vosk_recognizer_set_nlsml(_recognizer, _use_nlsml_output);
 }
 
-godot::Error gdvosk::VoskRecognizer::accept_stream(const Ref<godot::AudioStreamWAV>& stream)
+Error gdvosk::VoskRecognizer::accept_stream(const Ref<AudioStreamWAV>& stream)
 {
     auto data = stream->is_stereo()
         ? mix_stereo_to_mono(stream->get_data())
@@ -186,7 +191,7 @@ godot::Error gdvosk::VoskRecognizer::accept_stream(const Ref<godot::AudioStreamW
     return FAILED;
 }
 
-godot::Error gdvosk::VoskRecognizer::accept_samples(const PackedVector2Array& samples)
+Error gdvosk::VoskRecognizer::accept_samples(const PackedVector2Array& samples)
 {
     auto data = mix_stereo_to_mono(samples);
 
@@ -207,7 +212,7 @@ godot::Error gdvosk::VoskRecognizer::accept_samples(const PackedVector2Array& sa
     return FAILED;
 }
 
-godot::PackedByteArray gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedByteArray& data)
+PackedByteArray gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedByteArray& data)
 {
     if (data.size() % 4 != 0)
     {
@@ -235,7 +240,7 @@ godot::PackedByteArray gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedBy
     return output;
 }
 
-godot::PackedFloat32Array gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedVector2Array& data)
+PackedFloat32Array gdvosk::VoskRecognizer::mix_stereo_to_mono(const PackedVector2Array& data)
 {
     PackedFloat32Array output;
     output.resize(data.size());
@@ -252,7 +257,7 @@ godot::PackedFloat32Array gdvosk::VoskRecognizer::mix_stereo_to_mono(const Packe
     return output;
 }
 
-godot::Dictionary gdvosk::VoskRecognizer::get_result()
+Dictionary gdvosk::VoskRecognizer::get_result()
 {
     auto result = vosk_recognizer_result(_recognizer);
     if (result == nullptr)
@@ -263,7 +268,7 @@ godot::Dictionary gdvosk::VoskRecognizer::get_result()
     return parse_json_as_dictionary(result);
 }
 
-godot::Dictionary gdvosk::VoskRecognizer::get_partial_result()
+Dictionary gdvosk::VoskRecognizer::get_partial_result()
 {
     auto result = vosk_recognizer_partial_result(_recognizer);
     if (result == nullptr)
@@ -274,7 +279,7 @@ godot::Dictionary gdvosk::VoskRecognizer::get_partial_result()
     return parse_json_as_dictionary(result);
 }
 
-godot::Dictionary gdvosk::VoskRecognizer::get_final_result()
+Dictionary gdvosk::VoskRecognizer::get_final_result()
 {
     auto result = vosk_recognizer_final_result(_recognizer);
     if (result == nullptr)
@@ -285,7 +290,7 @@ godot::Dictionary gdvosk::VoskRecognizer::get_final_result()
     return parse_json_as_dictionary(result);
 }
 
-godot::Dictionary gdvosk::VoskRecognizer::parse_json_as_dictionary(const godot::String& data)
+Dictionary gdvosk::VoskRecognizer::parse_json_as_dictionary(const String& data)
 {
     Ref<JSON> parsed;
     parsed.instantiate();
