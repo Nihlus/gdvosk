@@ -48,6 +48,7 @@ void uninitialize_gdvosk_module(ModuleInitializationLevel p_level)
         return;
     }
 
+    ResourceLoader::get_singleton()->remove_resource_format_loader(_model_loader);
     _model_loader.unref();
 }
 
